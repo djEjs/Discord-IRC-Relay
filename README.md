@@ -20,3 +20,6 @@ This project is a simple Discord/IRC bot that relays irc messages to and from a 
 
 ## Credits 
 Much of the code was adapted from [VoiDeD's bot](https://github.com/VoiDeD/steam-irc-bot/), so many thanks for the guidance. Also I'd like to thank the guys on #opensteamworks in gamesurge irc.
+
+## Test
+야호
