@@ -1,14 +1,14 @@
-{
+﻿{
 	"IRCServer": "irc.luatic.net",
 	"IRCPort": 6667,
-	"IRCChannel": "#djEjs",
-	"IRCNick": "djEjsBot",
+	"IRCChannel": "#심비록",
+	"IRCNick": "심심빙봇",
 	"IRCAuthUser": "djEjs",
 	"IRCLoginName": "djEjs2",
 	"IRCLogMessages": true,
 	"IRCAuthString": "",
-	"DiscordBotToken": "wXZ260BWHI4tbgpdeltUB0L7z2FRbpVI",
-	"DiscordGuildName": "�ɺ��",
+	"DiscordBotToken": "NDk2MTI4NzMyNzEzNDUxNTIw.DpMILQ.RJBHNZsxgB_lpBVVPbM-_EURkPg",
+	"DiscordGuildName": "심비록",
 	"DiscordChannelName": "text_message",
 	"SpamFilter": [
 	],
