@@ -16,6 +16,8 @@
  */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
@@ -40,9 +42,9 @@ namespace IRCRelay
             this.config = config;
             this.session = session;
 
-            ircClient = new IrcClient
-            {
-                Encoding = System.Text.Encoding.UTF8,
+			ircClient = new IrcClient
+			{
+				Encoding = System.Text.Encoding.Default,
                 SendDelay = 50,
 
                 ActiveChannelSyncing = true,
@@ -50,26 +52,14 @@ namespace IRCRelay
                 AutoRejoinOnKick = true
             };
 
-            ircClient.OnConnected += this.OnConnected;
-            ircClient.OnDisconnected += this.OnDisconnected;
+            ircClient.OnConnected += OnConnected;
+            ircClient.OnError += this.OnError;
             ircClient.OnChannelMessage += this.OnChannelMessage;
         }
 
         public void SendMessage(string username, string message)
         {
-            if (!Program.HasMember(config, "HideDiscordNames")) // bcompat
-            {
-                ircClient.SendMessage(SendType.Message, config.IRCChannel, "<" + username + "> " + message);
-                return;
-            }
-            if (!config.HideDiscordNames) // normal behavior (don't hide)
-            {
-                ircClient.SendMessage(SendType.Message, config.IRCChannel, "<" + username + "> " + message);
-                return;
-            }
-
-            // now let's hide.
-            ircClient.SendMessage(SendType.Message, config.IRCChannel, message);
+            ircClient.SendMessage(SendType.Message, config.IRCChannel, "<12@" + username + "> " + message);
         }
 
         public async Task SpawnBot()
@@ -94,16 +84,16 @@ namespace IRCRelay
 
         private void OnConnected(object sender, EventArgs e)
         {
-            Discord.Log(new LogMessage(LogSeverity.Critical, "IRCSpawn", "IRC bot initialized."));
+            Discord.Log(new LogMessage(LogSeverity.Critical, "IRCSpawn", "IRC bot initalized."));
         }
 
-        private void OnDisconnected(object sender, EventArgs e)
+        private void OnError(object sender, ErrorEventArgs e)
         {
             /* Create a new thread to kill the session. We cannot block
              * this Disconnect call */
             new Thread(async() => await session.Kill(Session.TargetBot.Both)).Start();
 
-            Discord.Log(new LogMessage(LogSeverity.Critical, "IRCOnError", "Irc Disconnected"));
+            Discord.Log(new LogMessage(LogSeverity.Critical, "IRCOnError", e.ErrorMessage));
         }
 
         private void OnChannelMessage(object sender, IrcEventArgs e)
@@ -133,45 +123,81 @@ namespace IRCRelay
             if (msg.Contains("@everyone"))
             {
                 msg = msg.Replace("@everyone", "\\@everyone");
-            }
+			}
 
-            string prefix = "";
+			string[] msg_split = msg.Split(' ');
 
-            var usr = e.Data.Irc.GetChannelUser(config.IRCChannel, e.Data.Nick);
-            if (usr.IsOp)
-            {
-                prefix = "@";
-            }
-            else if (usr.IsVoice)
-            {
-                prefix = "+";
-            }
+			if (msg_split[0] == "!디코")
+			{
+				string userList = "";
 
-            if (Program.HasMember(config, "SpamFilter")) //bcompat for older configurations
-            {
-                foreach (string badstr in config.SpamFilter)
-                {
-                    if (msg.ToLower().Contains(badstr.ToLower()))
-                    {
-                        ircClient.SendMessage(SendType.Message, config.IRCChannel, "Message with blacklisted input will not be relayed!");
-                        return;
-                    }
-                }
-            }
+				var Guilds = session.Discord.Client.Guilds;
+				foreach(var guild in Guilds)
+				{
+					var users = guild.Users;
+					foreach (var user in users)
+					{
+						if(msg_split.Length > 1)
+						{
+							if (msg_split[1] == "all")
+							{
+								userList += "@" + user.Username + ", ";
+							}
+							else
+							{
+								if (user.Status != UserStatus.Offline)
+								{
+									userList += "@" + user.Username + ", ";
+								}
+							}
+						}
+						else
+						{
+							if (user.Status != UserStatus.Offline)
+							{
+								userList += "@" + user.Username + ", ";
+							}
+						}
+					}
+				}
+				ircClient.SendMessage(SendType.Message, config.IRCChannel, userList);
+			}
+			
+			var Guild = session.Discord.Client.Guilds;
+			foreach (var guild in Guild)
+			{
+				var Users = guild.Users;
+				foreach(var user in Users)
+				{
+					msg = msg.Replace('@' + user.Username, "<@" + user.Id + ">");
+				}
+			}
 
-            if (!Program.HasMember(config, "HideIRCNames")) // bcompat
-            {
-                session.SendMessage(Session.TargetBot.Discord, "**<" + prefix + Regex.Escape(e.Data.Nick) + ">** " + msg);
-                return;
-            }
-            if (!config.HideIRCNames) // normal behavior (don't hide)
-            {
-                session.SendMessage(Session.TargetBot.Discord, "**<" + prefix + Regex.Escape(e.Data.Nick) + ">** " + msg);
-                return;
-            }
+			string prefix = "";
 
-            // now let's hide.
-            session.SendMessage(Session.TargetBot.Discord, msg);
+			var usr = e.Data.Irc.GetChannelUser(config.IRCChannel, e.Data.Nick);
+			if (usr.IsOp)
+			{
+				prefix = "@";
+			}
+			else if (usr.IsVoice)
+			{
+				prefix = "+";
+			}
+
+			if (Program.HasMember(config, "SpamFilter")) //bcompat for older configurations
+			{
+				foreach (string badstr in config.SpamFilter)
+				{
+					if (msg.ToLower().Contains(badstr.ToLower()))
+					{
+						ircClient.SendMessage(SendType.Message, config.IRCChannel, "Message with blacklisted input will not be relayed!");
+						return;
+					}
+				}
+			}
+
+			session.SendMessage(Session.TargetBot.Discord, "**<" + prefix + Regex.Escape(e.Data.Nick) + ">** " + msg);
         }
     }
 }

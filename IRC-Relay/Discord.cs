@@ -32,6 +32,8 @@ using System.Text.RegularExpressions;
 using System.Text;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Collections;
+using Meebey.SmartIrc4net;
 
 namespace IRCRelay
 {
@@ -44,7 +46,7 @@ namespace IRCRelay
         private IServiceProvider services;
         private dynamic config;
 
-        public DiscordSocketClient Client { get => client; }
+		public DiscordSocketClient Client { get => client; }
 
         public Discord(dynamic config, Session session)
         {
@@ -77,7 +79,7 @@ namespace IRCRelay
 
         public async Task OnDiscordConnected()
         {
-            await Discord.Log(new LogMessage(LogSeverity.Critical, "DiscSpawn", "Discord bot initialized."));
+            await Discord.Log(new LogMessage(LogSeverity.Critical, "DiscSpawn", "Discord bot initalized."));
         }
 
         /* When we disconnect from discord (we got booted off), we'll remake */
@@ -122,37 +124,42 @@ namespace IRCRelay
                     }
                 }
             }
-
+			
             /* Santize discord-specific notation to human readable things */
-            string formatted = RemoveCodeblock(messageParam.Content, message, out string code);
-            formatted = MentionToNickname(formatted, message);
-            formatted = EmojiToName(formatted, message);
-            formatted = ChannelMentionToName(formatted, message);
+            string formatted = await DoURLMessage(messageParam.Content, message);
+			formatted = MentionToNickname(formatted, message);
+		//	formatted = EmojiToName(formatted, message);
+		//	formatted = ChannelMentionToName(formatted, message);
             formatted = Unescape(formatted);
 
-            string[] parts = formatted.Split('\n');
-            if (parts.Length > 3) // don't spam IRC, please.
-            {
-                await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": Too many lines! If you're meaning to post" +
-                    " code blocks, please use \\`\\`\\` to open & close the codeblock." +
-                    "\nYour message has been deleted and was not relayed to IRC. Please try again.");
-                await messageParam.DeleteAsync();
+			if(formatted == "!아얄")
+			{
+				string nickname_list = "";
+				string requested_channel = config.IRCChannel;
+				Channel channel = session.Irc.Client.GetChannel(requested_channel);
 
-                await messageParam.Author.SendMessageAsync("To prevent you from having to re-type your message,"
-                    + " here's what you tried to send: \n ```"
-                    + messageParam.Content
-                    + "```");
+				foreach (DictionaryEntry de in channel.Users)
+				{
+					string key = (string)de.Key;
+					Meebey.SmartIrc4net.ChannelUser channeluser = (Meebey.SmartIrc4net.ChannelUser)de.Value;
 
-                return;
-            }
+					if (channeluser.Nick == config.IRCNick)
+					{
+						continue;
+					}
+					if (channeluser.IsOp)
+					{
+						nickname_list += "@";
+					}
+					if (channeluser.IsVoice)
+					{
+						nickname_list += "+";
+					}
+					nickname_list += channeluser.Nick + ", ";
+				}
 
-            if (code.Length > 0)
-            {
-                if (Program.HasMember(config, "StikkedCreateUrlAndKey") && config.StikkedCreateUrlAndKey.Length > 0)
-                    await DoStikkedUpload(code, message);
-                else
-                    DoHastebinUpload(code, message);
-            }
+				session.SendMessage(Session.TargetBot.Discord, nickname_list);
+			}
 
             if (Program.HasMember(config, "SpamFilter")) //bcompat for older configurations
             {
@@ -172,6 +179,22 @@ namespace IRCRelay
             {
                 await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": messages > 1000 characters cannot be successfully transmitted to IRC!");
                 await messageParam.DeleteAsync();
+                return;
+            }
+
+            string[] parts = formatted.Split('\n');
+            if (parts.Length > 3) // don't spam IRC, please.
+            {
+                await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": Too many lines! If you're meaning to post" +
+                    " code blocks, please use \\`\\`\\` to open & close the codeblock." +
+                    "\nYour message has been deleted and was not relayed to IRC. Please try again.");
+                await messageParam.DeleteAsync();
+
+                await messageParam.Author.SendMessageAsync("To prevent you from having to re-type your message,"
+                    + " here's what you tried to send: \n ```"
+                    + messageParam.Content
+                    + "```");
+
                 return;
             }
 
@@ -208,9 +231,8 @@ namespace IRCRelay
 
         /**     Helper methods      **/
 
-        public string RemoveCodeblock(string input, SocketUserMessage msg, out string codeout)
+        public async Task<string> DoURLMessage(string input, SocketUserMessage msg)
         {
-            codeout = "";
             string text = "```";
             if (input.Contains("```"))
             {
@@ -218,7 +240,12 @@ namespace IRCRelay
                 int end = input.IndexOf(text, start + text.Length, StringComparison.CurrentCulture);
 
                 string code = input.Substring(start + text.Length, (end - start) - text.Length);
-                codeout = code; //await DoStikkedUpload(code, msg);
+
+                if (Program.HasMember(config, "StikkedCreateUrlAndKey") && config.StikkedCreateUrlAndKey.Length > 0)
+                    await DoStikkedUpload(code, msg);
+                else
+                    DoHastebinUpload(code, msg);
+
                 input = input.Remove(start, (end - start) + text.Length);
             }
             return input;
@@ -253,8 +280,8 @@ namespace IRCRelay
 
                 if (config.IRCLogMessages)
                     LogManager.WriteLog(MsgSendType.DiscordToIRC, username, url, "log.txt");
-                session.SendMessage(Session.TargetBot.IRC, url, username);
 
+                session.SendMessage(Session.TargetBot.IRC, url, username);
             }
         }
 
@@ -283,11 +310,10 @@ namespace IRCRelay
                 string result = "https://hastebin.com/" + key + ".cs";
 
                 var msg = (SocketUserMessage)e.UserState;
-                string username = (msg.Author as SocketGuildUser)?.Nickname ?? msg.Author.Username;
                 if (config.IRCLogMessages)
-                    LogManager.WriteLog(MsgSendType.DiscordToIRC, username, result, "log.txt");
+                    LogManager.WriteLog(MsgSendType.DiscordToIRC, msg.Author.Username, result, "log.txt");
 
-                session.SendMessage(Session.TargetBot.IRC, result, username);
+                session.SendMessage(Session.TargetBot.IRC, result, msg.Author.Username);
             }
         }
 
@@ -314,7 +340,7 @@ namespace IRCRelay
                 * occured. Thus, we add the length and then subtract after the replace
                 */
                 difference += input.Length;
-                string username = ((user as SocketGuildUser)?.Nickname ?? user.Username);
+                string username = "@" + ((user as SocketGuildUser)?.Nickname ?? user.Username);
                 input = ReplaceFirst(input, removal, username);
                 difference -= input.Length;
             }
@@ -327,23 +353,23 @@ namespace IRCRelay
             Regex reg = new Regex("\\`[^`]*\\`");
 
             int count = 0;
-            List<string> pieces = new List<string>();
+            List<string> peices = new List<string>();
             reg.Replace(input, (m) => {
-                pieces.Add(m.Value);
+                peices.Add(m.Value);
                 input = input.Replace(m.Value, string.Format("__NEVER_BE_SENT_PLEASE_{0}_!@#%", count));
                 count++;
                 return ""; // doesn't matter what we replace with
             });
 
-            string retstr = Regex.Replace(input, @"\\([^A-Za-z0-9 ])", "$1");
+            string retstr = Regex.Replace(input, @"\\([^A-Za-z0-9])", "$1");
 
             // From here we prep the return string by doing our regex on the input that's not in '`'
             reg = new Regex("__NEVER_BE_SENT_PLEASE_([0-9]+)_!@#%");
             input = reg.Replace(retstr, (m) => {
-                return pieces[int.Parse(m.Result("$1"))].ToString();
+                return peices[int.Parse(m.Result("$1"))].ToString();
             });
 
-            return input; // thank f***k we're done
+            return input; // thank fuck we're done
         }
 
         public static string ChannelMentionToName(string input, SocketUserMessage message)
@@ -400,8 +426,8 @@ namespace IRCRelay
 
                 returnString = input.Replace(substring, ":" + sections[1] + ":");
             }
-
-            return returnString;
+			//return returnString;
+            return input;
         }
 
         public void SendMessageAllToTarget(string targetGuild, string message, string targetChannel)

@@ -52,7 +52,7 @@ namespace IRCRelay.Logs
 
             try
             {
-                string date = "[" + DateTime.Now.ToString(new CultureInfo("en-US")) + "]";
+                string date = "[" + DateTime.Now.ToString(new CultureInfo("ko-KR")) + "]";
                 string logMessage = string.Format("{0} {1} <{2}> {3}", date, prefix, name, message);
 
                 using (StreamWriter stream = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + filename, true))
