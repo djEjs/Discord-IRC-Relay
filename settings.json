@@ -1,0 +1,20 @@
+{
+	"IRCServer": "irc.luatic.net",
+	"IRCPort": 6667,
+	"IRCChannel": "#djEjs",
+	"IRCNick": "djEjsBot",
+	"IRCAuthUser": "djEjs",
+	"IRCLoginName": "djEjs2",
+	"IRCLogMessages": true,
+	"IRCAuthString": "",
+	"DiscordBotToken": "wXZ260BWHI4tbgpdeltUB0L7z2FRbpVI",
+	"DiscordGuildName": "½Éºñ·Ï",
+	"DiscordChannelName": "text_message",
+	"SpamFilter": [
+	],
+	"IRCNameBlacklist": [
+	],
+	"DiscordUserIDBlacklist": [
+	],
+	"StikkedCreateUrlAndKey": ""
+}
