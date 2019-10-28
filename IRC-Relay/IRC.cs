@@ -34,6 +34,7 @@ namespace IRCRelay
         private Session session;
         private dynamic config;
         private IrcClient ircClient;
+		private Random random;
 
         public IrcClient Client { get => ircClient; set => ircClient = value; }
 
@@ -55,6 +56,8 @@ namespace IRCRelay
             ircClient.OnConnected += OnConnected;
             ircClient.OnError += this.OnError;
             ircClient.OnChannelMessage += this.OnChannelMessage;
+			
+			random = new Random();
         }
 
         public void SendMessage(string username, string message)
@@ -161,6 +164,21 @@ namespace IRCRelay
 					}
 				}
 				ircClient.SendMessage(SendType.Message, config.IRCChannel, userList);
+			}
+			
+			if (msg_split[0] == "!골라")
+			{
+				if(msg_split.length > 2)
+				{
+					string choose = msg_split[random.Next(1, msg_split.length];
+					
+					session.SendMessage(Session.TargetBot.IRC, choose);
+					session.SendMessage(Session.TargetBot.Discord, choose);
+				}
+				else
+				{
+					session.SendMessage(Session.TargetBot.IRC, "[!골라] 명령어는 띄어쓰기로 구분해주세요");
+				}
 			}
 			
 			var Guild = session.Discord.Client.Guilds;
