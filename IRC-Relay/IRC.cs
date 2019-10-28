@@ -168,9 +168,9 @@ namespace IRCRelay
 			
 			if (msg_split[0] == "!골라")
 			{
-				if(msg_split.length > 2)
+				if (msg_split.Length > 2)
 				{
-					string choose = msg_split[random.Next(1, msg_split.length];
+					string choose = msg_split[random.Next(1, msg_split.Length)];
 					
 					session.SendMessage(Session.TargetBot.IRC, choose);
 					session.SendMessage(Session.TargetBot.Discord, choose);
