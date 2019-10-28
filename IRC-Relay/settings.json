@@ -1,22 +1,20 @@
 {
-  "IRCServer": "server",
-  "IRCPort": 6667,
-  "IRCChannel": "#channel",
-  "IRCNick": "nick",
-  "IRCAuthUser": "some user",
-  "IRCLoginName": "auth login name",
-  "IRCLogMessages": true,
-  "IRCAuthString": "some command here",
-  "DiscordBotToken": "token",
-  "DiscordGuildName": "server name",
-  "DiscordChannelName": "text channel",
-  "SpamFilter": [
-  ],
-  "IRCNameBlacklist": [
-  ],
-  "DiscordUserIDBlacklist": [
-  ],
-  "StikkedCreateUrlAndKey": "",
-  "HideDiscordNames": false,
-  "HideIRCNames":  false
+	"IRCServer": "irc.luatic.net",
+	"IRCPort": 6667,
+	"IRCChannel": "#심비록",
+	"IRCNick": "심심빙봇",
+	"IRCAuthUser": "djEjs",
+	"IRCLoginName": "djEjs2",
+	"IRCLogMessages": true,
+	"IRCAuthString": "",
+	"DiscordBotToken": "NDk2MTI4NzMyNzEzNDUxNTIw.DpMILQ.RJBHNZsxgB_lpBVVPbM-_EURkPg",
+	"DiscordGuildName": "심비록",
+	"DiscordChannelName": "text_message",
+	"SpamFilter": [
+	],
+	"IRCNameBlacklist": [
+	],
+	"DiscordUserIDBlacklist": [
+	],
+	"StikkedCreateUrlAndKey": ""
 }
