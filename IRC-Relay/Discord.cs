@@ -128,8 +128,8 @@ namespace IRCRelay
             /* Santize discord-specific notation to human readable things */
             string formatted = await DoURLMessage(messageParam.Content, message);
 			formatted = MentionToNickname(formatted, message);
-		//	formatted = EmojiToName(formatted, message);
-		//	formatted = ChannelMentionToName(formatted, message);
+			formatted = EmojiToName(formatted, message);
+			formatted = ChannelMentionToName(formatted, message);
             formatted = Unescape(formatted);
 
 			if(formatted == "!아얄")
