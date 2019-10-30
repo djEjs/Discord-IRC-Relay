@@ -132,7 +132,7 @@ namespace IRCRelay
 			formatted = ChannelMentionToName(formatted, message);
             formatted = Unescape(formatted);
 
-			if(formatted == "!아얄씨")
+			if(formatted == "!아얄")
 			{
 				string nickname_list = "";
 				string requested_channel = config.IRCChannel;
@@ -426,8 +426,7 @@ namespace IRCRelay
 
                 returnString = input.Replace(substring, ":" + sections[1] + ":");
             }
-			//return returnString;
-            return input;
+			return returnString;
         }
 
         public void SendMessageAllToTarget(string targetGuild, string message, string targetChannel)
