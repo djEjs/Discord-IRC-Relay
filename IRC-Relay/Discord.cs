@@ -132,7 +132,7 @@ namespace IRCRelay
 			formatted = ChannelMentionToName(formatted, message);
             formatted = Unescape(formatted);
 
-			if(formatted == "!아얄")
+			if(formatted == "!아얄씨")
 			{
 				string nickname_list = "";
 				string requested_channel = config.IRCChannel;
