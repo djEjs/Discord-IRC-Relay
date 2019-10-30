@@ -45,6 +45,7 @@ namespace IRCRelay
         private CommandService commands;
         private IServiceProvider services;
         private dynamic config;
+		private Random random;
 
 		public DiscordSocketClient Client { get => client; }
 
@@ -69,6 +70,8 @@ namespace IRCRelay
             client.MessageReceived += OnDiscordMessage;
             client.Connected += OnDiscordConnected;
             client.Disconnected += OnDiscordDisconnect;
+			
+			random = new Random();
         }
 
         public async Task SpawnBot()
@@ -131,8 +134,10 @@ namespace IRCRelay
 			formatted = EmojiToName(formatted, message);
 			formatted = ChannelMentionToName(formatted, message);
             formatted = Unescape(formatted);
+			
+			string[] msg_split = formatted.Split(formatted.ToCharArray(), ' ');
 
-			if(formatted == "!아얄")
+			if(msg_split[0] == "!아얄")
 			{
 				string nickname_list = "";
 				string requested_channel = config.IRCChannel;
@@ -159,6 +164,21 @@ namespace IRCRelay
 				}
 
 				session.SendMessage(Session.TargetBot.Discord, nickname_list);
+			}
+
+			if(msg_split[0] == "!골라")
+			{
+				if(msg_split.Length > 2)
+				{
+					string choose = msg_split[random.Next(1, msg_split.Length)];
+					
+					session.SendMessage(Session.TargetBot.IRC, choose);
+					session.SendMessage(Session.TargetBot.Discord, choose);
+				}
+				else
+				{
+					session.SendMessage(Session.TargetBot.Discord, "[!골라] 명령어는 띄어쓰기로 구분해주세요");
+				}
 			}
 
             if (Program.HasMember(config, "SpamFilter")) //bcompat for older configurations
