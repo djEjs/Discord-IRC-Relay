@@ -128,6 +128,11 @@ namespace IRCRelay
                 msg = msg.Replace("@everyone", "\\@everyone");
 			}
 
+            if(msg[0].ToString() == "$")
+            {
+                ircClient.SendMessage(SendType.Message, config.IRCChannel, msg.Replace("$", ""));
+            }
+
 			string[] msg_split = msg.Split(' ');
 
 			if (msg_split[0] == "!디코")

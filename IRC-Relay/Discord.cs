@@ -171,6 +171,10 @@ namespace IRCRelay
                 //테스트용 코드
 				session.SendMessage(Session.TargetBot.Discord, "어그래");
             }
+            if(formatted[0].ToString() == "$")
+            {
+                session.SendMessage(Session.TargetBot.IRC, formatted.Replace("$",""));
+            }
 			if(msg_split[0] == "!골라")
 			{
 				if(msg_split.Length > 2)
