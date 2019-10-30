@@ -131,6 +131,7 @@ namespace IRCRelay
             if(msg[0].ToString() == "$")
             {
                 session.SendMessage(Session.TargetBot.Discord, msg.Replace("$", ""));
+                return;
             }
 
 			string[] msg_split = msg.Split(' ');

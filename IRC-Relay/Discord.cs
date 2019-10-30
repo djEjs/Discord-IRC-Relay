@@ -174,6 +174,7 @@ namespace IRCRelay
             if(formatted[0].ToString() == "$")
             {
                 session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, formatted.Replace("$", ""));
+                return;
             }
 			if(msg_split[0] == "!골라")
 			{
