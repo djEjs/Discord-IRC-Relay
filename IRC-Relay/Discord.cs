@@ -173,7 +173,7 @@ namespace IRCRelay
             }
             if(formatted[0].ToString() == "$")
             {
-                session.SendMessage(Session.TargetBot.IRC, formatted.Replace("$",""));
+                session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, formatted.Replace("$", ""));
             }
 			if(msg_split[0] == "!골라")
 			{
@@ -181,7 +181,7 @@ namespace IRCRelay
 				{
 					string choose = msg_split[random.Next(1, msg_split.Length)];
 					
-					session.SendMessage(Session.TargetBot.IRC, choose);
+                    session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, choose);
 					session.SendMessage(Session.TargetBot.Discord, choose);
 				}
 				else
