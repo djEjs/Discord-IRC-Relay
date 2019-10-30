@@ -135,7 +135,7 @@ namespace IRCRelay
 			formatted = ChannelMentionToName(formatted, message);
             formatted = Unescape(formatted);
 			
-			string[] msg_split = formatted.Split(formatted.ToCharArray(), ' ');
+			string[] msg_split = formatted.Split(' ');
 
 			if(msg_split[0] == "!아얄")
 			{
