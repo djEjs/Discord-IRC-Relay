@@ -171,15 +171,20 @@ namespace IRCRelay
 				if (msg_split.Length > 2)
 				{
 					string choose = msg_split[random.Next(1, msg_split.Length)];
-					
-					session.SendMessage(Session.TargetBot.IRC, choose);
+
+                    ircClient.SendMessage(SendType.Message, config.IRCChannel, choose);
 					session.SendMessage(Session.TargetBot.Discord, choose);
 				}
 				else
 				{
-					session.SendMessage(Session.TargetBot.IRC, "[!골라] 명령어는 띄어쓰기로 구분해주세요");
+                    ircClient.SendMessage(SendType.Message, config.IRCChannel, "[!골라] 명령어는 띄어쓰기로 구분해주세요");
 				}
 			}
+
+            if(msg[0] == '$')
+            {
+                session.SendMessage(Session.TargetBot.Discord, msg.Remove(1));
+            }
 			
 			var Guild = session.Discord.Client.Guilds;
 			foreach (var guild in Guild)

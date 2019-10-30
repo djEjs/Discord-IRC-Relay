@@ -181,6 +181,11 @@ namespace IRCRelay
 				}
 			}
 
+            if(formatted[0] == '$')
+            {
+                session.SendMessage(Session.TargetBot.IRC, formatted.Remove(1));
+            }
+
             if (Program.HasMember(config, "SpamFilter")) //bcompat for older configurations
             {
                 foreach (string badstr in config.SpamFilter)
