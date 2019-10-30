@@ -166,6 +166,11 @@ namespace IRCRelay
 				session.SendMessage(Session.TargetBot.Discord, nickname_list);
 			}
 
+			if(msg_split[0] == "!안녕")
+			{ 
+                //테스트용 코드
+				session.SendMessage(Session.TargetBot.Discord, "어그래");
+            }
 			if(msg_split[0] == "!골라")
 			{
 				if(msg_split.Length > 2)
