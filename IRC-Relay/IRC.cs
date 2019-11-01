@@ -128,11 +128,6 @@ namespace IRCRelay
                 msg = msg.Replace("@everyone", "\\@everyone");
 			}
 
-            if(msg[0].ToString() == "$")
-            {
-                session.SendMessage(Session.TargetBot.Discord, msg.Replace("$", ""));
-                return;
-            }
 
 			string[] msg_split = msg.Split(' ');
 
@@ -219,6 +214,13 @@ namespace IRCRelay
 						return;
 					}
 				}
+			}
+
+			if (msg[0].ToString() == "$")
+			{
+				session.SendMessage(Session.TargetBot.Discord, "**<" + prefix + Regex.Escape(e.Data.Nick) + ">** ");
+				session.SendMessage(Session.TargetBot.Discord, msg.Replace("$", ""));
+				return;
 			}
 
 			session.SendMessage(Session.TargetBot.Discord, "**<" + prefix + Regex.Escape(e.Data.Nick) + ">** " + msg);

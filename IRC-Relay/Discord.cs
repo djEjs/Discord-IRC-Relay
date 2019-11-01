@@ -127,9 +127,10 @@ namespace IRCRelay
                     }
                 }
             }
-			
-            /* Santize discord-specific notation to human readable things */
-            string formatted = await DoURLMessage(messageParam.Content, message);
+
+			/* Santize discord-specific notation to human readable things */
+			string username = (messageParam.Author as SocketGuildUser)?.Nickname ?? message.Author.Username;
+			string formatted = await DoURLMessage(messageParam.Content, message);
 			formatted = MentionToNickname(formatted, message);
 			formatted = EmojiToName(formatted, message);
 			formatted = ChannelMentionToName(formatted, message);
@@ -172,8 +173,9 @@ namespace IRCRelay
 				session.SendMessage(Session.TargetBot.Discord, "어그래");
             }
             if(formatted[0].ToString() == "$")
-            {
-                session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, formatted.Replace("$", ""));
+			{
+				session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, "<@" + username + ">");
+				session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, formatted.Replace("$", ""));
                 return;
             }
 			if(msg_split[0] == "!골라")
@@ -228,7 +230,6 @@ namespace IRCRelay
                 return;
             }
 
-            string username = (messageParam.Author as SocketGuildUser)?.Nickname ?? message.Author.Username;
             if (config.IRCLogMessages)
                 LogManager.WriteLog(MsgSendType.DiscordToIRC, username, formatted, "log.txt");
 
