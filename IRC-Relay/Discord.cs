@@ -167,11 +167,6 @@ namespace IRCRelay
 				session.SendMessage(Session.TargetBot.Discord, nickname_list);
 			}
 
-			if(msg_split[0] == "!안녕")
-			{ 
-                //테스트용 코드
-				session.SendMessage(Session.TargetBot.Discord, "어그래");
-            }
             if(formatted[0].ToString() == "$")
 			{
 				session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, "<@" + username + ">");
@@ -449,15 +444,23 @@ namespace IRCRelay
             string returnString = input;
 
             Regex regex = new Regex("<[A-Za-z0-9-_]?:[A-Za-z0-9-_]+:[0-9]+>");
-            Match match = regex.Match(input);
-            if (match.Success) // contains a emoji
-            {
-                string substring = input.Substring(match.Index, match.Length);
-                string[] sections = substring.Split(':');
 
-                returnString = input.Replace(substring, ":" + sections[1] + ":");
+            for (int i = 0; i < 10; i++) //최대 이모지 10개까지만 가능
+            {
+                Match match = regex.Match(returnString);
+                if (match.Success) // contains a emoji
+                {
+                    string substring = returnString.Substring(match.Index, match.Length);
+                    string[] sections = substring.Split(':');
+
+                    returnString = returnString.Replace(substring, ":" + sections[1] + ":");
+                }
+                else
+                {
+                    break;
+                }
             }
-			return returnString;
+            return returnString;
         }
 
         public void SendMessageAllToTarget(string targetGuild, string message, string targetChannel)
