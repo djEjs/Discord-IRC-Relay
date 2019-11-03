@@ -138,8 +138,13 @@ namespace IRCRelay
 
             string[] msg_split = formatted.Split(' ');
 
-            if(msg_split.Length > 0) //이미지만 출력하는 경우 메시지가 없음
+            if (config.IRCLogMessages)
+                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "0." + formatted, "log.txt");
+
+            if (msg_split.Length > 0) //이미지만 출력하는 경우 메시지가 없음
             {
+                if (config.IRCLogMessages)
+                    LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "1." + formatted, "log.txt");
                 if (msg_split[0] == "!아얄")
                 {
                     string nickname_list = "";
@@ -191,6 +196,8 @@ namespace IRCRelay
                     }
                 }
             }
+            if (config.IRCLogMessages)
+                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "2." + formatted, "log.txt");
 
             if (Program.HasMember(config, "SpamFilter")) //bcompat for older configurations
             {
@@ -205,6 +212,8 @@ namespace IRCRelay
                 }
             }
 
+            if (config.IRCLogMessages)
+                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "3." + formatted, "log.txt");
             // Send IRC Message
             if (formatted.Length > 1000)
             {
@@ -213,6 +222,8 @@ namespace IRCRelay
                 return;
             }
 
+            if (config.IRCLogMessages)
+                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "4." + formatted, "log.txt");
             string[] parts = formatted.Split('\n');
             if (parts.Length > 3) // don't spam IRC, please.
             {
