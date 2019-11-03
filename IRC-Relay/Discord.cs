@@ -135,8 +135,11 @@ namespace IRCRelay
 			formatted = EmojiToName(formatted, message);
 			formatted = ChannelMentionToName(formatted, message);
             formatted = Unescape(formatted);
-			
-			string[] msg_split = formatted.Split(' ');
+
+            if (config.IRCLogMessages)
+                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "0. " + formatted, "log.txt");
+
+            string[] msg_split = formatted.Split(' ');
 
 			if(msg_split[0] == "!아얄")
 			{
@@ -167,13 +170,20 @@ namespace IRCRelay
 				session.SendMessage(Session.TargetBot.Discord, nickname_list);
 			}
 
-            if(formatted[0].ToString() == "$")
+            if (config.IRCLogMessages)
+                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "1. " + formatted, "log.txt");
+
+            if (formatted[0].ToString() == "$")
 			{
 				session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, "<@" + username + ">");
 				session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, formatted.Replace("$", ""));
                 return;
             }
-			if(msg_split[0] == "!골라")
+
+            if (config.IRCLogMessages)
+                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "2. " + formatted, "log.txt");
+
+            if (msg_split[0] == "!골라")
 			{
 				if(msg_split.Length > 2)
 				{
@@ -188,6 +198,10 @@ namespace IRCRelay
 				}
 			}
 
+            if (config.IRCLogMessages)
+                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "3. " + formatted, "log.txt");
+
+
             if (Program.HasMember(config, "SpamFilter")) //bcompat for older configurations
             {
                 foreach (string badstr in config.SpamFilter)
@@ -200,6 +214,10 @@ namespace IRCRelay
                     }
                 }
             }
+
+            if (config.IRCLogMessages)
+                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "4. " + formatted, "log.txt");
+
 
             // Send IRC Message
             if (formatted.Length > 1000)
@@ -226,7 +244,12 @@ namespace IRCRelay
             }
 
             if (config.IRCLogMessages)
+                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "5. " + formatted, "log.txt");
+
+            if (config.IRCLogMessages)
                 LogManager.WriteLog(MsgSendType.DiscordToIRC, username, formatted, "log.txt");
+
+
 
             foreach (var attachment in message.Attachments)
             {
