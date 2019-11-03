@@ -106,45 +106,42 @@ namespace IRCRelay
 
         public async Task OnDiscordMessage(SocketMessage messageParam)
         {
-            if (!(messageParam is SocketUserMessage message)) return;
-
-            if (message.Author.Id == client.CurrentUser.Id) return; // block self
-
-            if (!messageParam.Channel.Name.Contains(config.DiscordChannelName)) return; // only relay trough specified channels
-            if (messageParam.Content.Contains("__NEVER_BE_SENT_PLEASE")) return; // don't break me
-
-            if (Program.HasMember(config, "DiscordUserIDBlacklist")) //bcompat for older configurations
+            string username = "";
+            string formatted = "";
+            try
             {
-                /**
-                 * We'll loop blacklisted user ids. If the user ID is found,
-                 * then we return out and prevent the call
-                 */
-                foreach (string id in config.DiscordUserIDBlacklist)
+                if (!(messageParam is SocketUserMessage message)) return;
+
+                if (message.Author.Id == client.CurrentUser.Id) return; // block self
+
+                if (!messageParam.Channel.Name.Contains(config.DiscordChannelName)) return; // only relay trough specified channels
+                if (messageParam.Content.Contains("__NEVER_BE_SENT_PLEASE")) return; // don't break me
+
+                if (Program.HasMember(config, "DiscordUserIDBlacklist")) //bcompat for older configurations
                 {
-                    if (message.Author.Id == ulong.Parse(id))
+                    /**
+                     * We'll loop blacklisted user ids. If the user ID is found,
+                     * then we return out and prevent the call
+                     */
+                    foreach (string id in config.DiscordUserIDBlacklist)
                     {
-                        return;
+                        if (message.Author.Id == ulong.Parse(id))
+                        {
+                            return;
+                        }
                     }
                 }
-            }
 
-			/* Santize discord-specific notation to human readable things */
-			string username = (messageParam.Author as SocketGuildUser)?.Nickname ?? message.Author.Username;
-			string formatted = await DoURLMessage(messageParam.Content, message);
-			formatted = MentionToNickname(formatted, message);
-			formatted = EmojiToName(formatted, message);
-			formatted = ChannelMentionToName(formatted, message);
-            formatted = Unescape(formatted);
+                /* Santize discord-specific notation to human readable things */
+                username = (messageParam.Author as SocketGuildUser)?.Nickname ?? message.Author.Username;
+                formatted = await DoURLMessage(messageParam.Content, message);
+                formatted = MentionToNickname(formatted, message);
+                formatted = EmojiToName(formatted, message);
+                formatted = ChannelMentionToName(formatted, message);
+                formatted = Unescape(formatted);
 
-            string[] msg_split = formatted.Split(' ');
+                string[] msg_split = formatted.Split(' ');
 
-            if (config.IRCLogMessages)
-                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "0." + formatted, "log.txt");
-
-            if (msg_split.Length > 0) //이미지만 출력하는 경우 메시지가 없음
-            {
-                if (config.IRCLogMessages)
-                    LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "1." + formatted, "log.txt");
                 if (msg_split[0] == "!아얄")
                 {
                     string nickname_list = "";
@@ -174,7 +171,7 @@ namespace IRCRelay
                     session.SendMessage(Session.TargetBot.Discord, nickname_list);
                 }
 
-                if (formatted[0].ToString() == "$")
+                if (formatted.Length > 0 && formatted[0].ToString() == "$")
                 {
                     session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, "<@" + username + ">");
                     session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, formatted.Replace("$", ""));
@@ -195,66 +192,65 @@ namespace IRCRelay
                         session.SendMessage(Session.TargetBot.Discord, "[!골라] 명령어는 띄어쓰기로 구분해주세요");
                     }
                 }
-            }
-            if (config.IRCLogMessages)
-                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "2." + formatted, "log.txt");
 
-            if (Program.HasMember(config, "SpamFilter")) //bcompat for older configurations
-            {
-                foreach (string badstr in config.SpamFilter)
+                if (Program.HasMember(config, "SpamFilter")) //bcompat for older configurations
                 {
-                    if (formatted.ToLower().Contains(badstr.ToLower()))
+                    foreach (string badstr in config.SpamFilter)
                     {
-                        await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": Message with blacklisted input will not be relayed!");
-                        await messageParam.DeleteAsync();
-                        return;
+                        if (formatted.ToLower().Contains(badstr.ToLower()))
+                        {
+                            await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": Message with blacklisted input will not be relayed!");
+                            await messageParam.DeleteAsync();
+                            return;
+                        }
+                    }
+                }
+
+                // Send IRC Message
+                if (formatted.Length > 1000)
+                {
+                    await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": messages > 1000 characters cannot be successfully transmitted to IRC!");
+                    await messageParam.DeleteAsync();
+                    return;
+                }
+
+                string[] parts = formatted.Split('\n');
+                if (parts.Length > 3) // don't spam IRC, please.
+                {
+                    await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": Too many lines! If you're meaning to post" +
+                        " code blocks, please use \\`\\`\\` to open & close the codeblock." +
+                        "\nYour message has been deleted and was not relayed to IRC. Please try again.");
+                    await messageParam.DeleteAsync();
+
+                    await messageParam.Author.SendMessageAsync("To prevent you from having to re-type your message,"
+                        + " here's what you tried to send: \n ```"
+                        + messageParam.Content
+                        + "```");
+
+                    return;
+                }
+
+                if (config.IRCLogMessages)
+                    LogManager.WriteLog(MsgSendType.DiscordToIRC, username, formatted, "log.txt");
+
+
+                foreach (var attachment in message.Attachments)
+                {
+                    session.SendMessage(Session.TargetBot.IRC, attachment.Url, username);
+                }
+
+                foreach (String part in parts) // we're going to send each line indpependently instead of letting irc clients handle it.
+                {
+                    if (part.Trim().Length != 0) // if the string is not empty or just spaces
+                    {
+                        session.SendMessage(Session.TargetBot.IRC, part, username);
                     }
                 }
             }
-
-            if (config.IRCLogMessages)
-                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "3." + formatted, "log.txt");
-            // Send IRC Message
-            if (formatted.Length > 1000)
+            catch (Exception e)
             {
-                await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": messages > 1000 characters cannot be successfully transmitted to IRC!");
-                await messageParam.DeleteAsync();
-                return;
-            }
-
-            if (config.IRCLogMessages)
-                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "4." + formatted, "log.txt");
-            string[] parts = formatted.Split('\n');
-            if (parts.Length > 3) // don't spam IRC, please.
-            {
-                await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": Too many lines! If you're meaning to post" +
-                    " code blocks, please use \\`\\`\\` to open & close the codeblock." +
-                    "\nYour message has been deleted and was not relayed to IRC. Please try again.");
-                await messageParam.DeleteAsync();
-
-                await messageParam.Author.SendMessageAsync("To prevent you from having to re-type your message,"
-                    + " here's what you tried to send: \n ```"
-                    + messageParam.Content
-                    + "```");
-
-                return;
-            }
-
-            if (config.IRCLogMessages)
-                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, formatted, "log.txt");
-
-
-            foreach (var attachment in message.Attachments)
-            {
-                session.SendMessage(Session.TargetBot.IRC, attachment.Url, username);
-            }
-
-            foreach (String part in parts) // we're going to send each line indpependently instead of letting irc clients handle it.
-            {
-                if (part.Trim().Length != 0) // if the string is not empty or just spaces
-                {
-                    session.SendMessage(Session.TargetBot.IRC, part, username);
-                }
+                if (config.IRCLogMessages)
+                    LogManager.WriteLog(MsgSendType.DiscordToIRC, username, formatted + "->[Exception caught]" + e.ToString(), "log.txt");
             }
         }
 
