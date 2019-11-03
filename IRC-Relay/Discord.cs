@@ -136,71 +136,61 @@ namespace IRCRelay
 			formatted = ChannelMentionToName(formatted, message);
             formatted = Unescape(formatted);
 
-            if (config.IRCLogMessages)
-                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "0. " + formatted, "log.txt");
-
             string[] msg_split = formatted.Split(' ');
 
-			if(msg_split[0] == "!아얄")
-			{
-				string nickname_list = "";
-				string requested_channel = config.IRCChannel;
-				Channel channel = session.Irc.Client.GetChannel(requested_channel);
+            if(msg_split.Length > 0) //이미지만 출력하는 경우 메시지가 없음
+            {
+                if (msg_split[0] == "!아얄")
+                {
+                    string nickname_list = "";
+                    string requested_channel = config.IRCChannel;
+                    Channel channel = session.Irc.Client.GetChannel(requested_channel);
 
-				foreach (DictionaryEntry de in channel.Users)
-				{
-					string key = (string)de.Key;
-					Meebey.SmartIrc4net.ChannelUser channeluser = (Meebey.SmartIrc4net.ChannelUser)de.Value;
+                    foreach (DictionaryEntry de in channel.Users)
+                    {
+                        string key = (string)de.Key;
+                        Meebey.SmartIrc4net.ChannelUser channeluser = (Meebey.SmartIrc4net.ChannelUser)de.Value;
 
-					if (channeluser.Nick == config.IRCNick)
-					{
-						continue;
-					}
-					if (channeluser.IsOp)
-					{
-						nickname_list += "@";
-					}
-					if (channeluser.IsVoice)
-					{
-						nickname_list += "+";
-					}
-					nickname_list += channeluser.Nick + ", ";
-				}
+                        if (channeluser.Nick == config.IRCNick)
+                        {
+                            continue;
+                        }
+                        if (channeluser.IsOp)
+                        {
+                            nickname_list += "@";
+                        }
+                        if (channeluser.IsVoice)
+                        {
+                            nickname_list += "+";
+                        }
+                        nickname_list += channeluser.Nick + ", ";
+                    }
 
-				session.SendMessage(Session.TargetBot.Discord, nickname_list);
-			}
+                    session.SendMessage(Session.TargetBot.Discord, nickname_list);
+                }
 
-            if (config.IRCLogMessages)
-                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "1. " + formatted, "log.txt");
+                if (formatted[0].ToString() == "$")
+                {
+                    session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, "<@" + username + ">");
+                    session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, formatted.Replace("$", ""));
+                    return;
+                }
 
-            if (formatted[0].ToString() == "$")
-			{
-				session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, "<@" + username + ">");
-				session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, formatted.Replace("$", ""));
-                return;
+                if (msg_split[0] == "!골라")
+                {
+                    if (msg_split.Length > 2)
+                    {
+                        string choose = msg_split[random.Next(1, msg_split.Length)];
+
+                        session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, choose);
+                        session.SendMessage(Session.TargetBot.Discord, choose);
+                    }
+                    else
+                    {
+                        session.SendMessage(Session.TargetBot.Discord, "[!골라] 명령어는 띄어쓰기로 구분해주세요");
+                    }
+                }
             }
-
-            if (config.IRCLogMessages)
-                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "2. " + formatted, "log.txt");
-
-            if (msg_split[0] == "!골라")
-			{
-				if(msg_split.Length > 2)
-				{
-					string choose = msg_split[random.Next(1, msg_split.Length)];
-					
-                    session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, choose);
-					session.SendMessage(Session.TargetBot.Discord, choose);
-				}
-				else
-				{
-					session.SendMessage(Session.TargetBot.Discord, "[!골라] 명령어는 띄어쓰기로 구분해주세요");
-				}
-			}
-
-            if (config.IRCLogMessages)
-                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "3. " + formatted, "log.txt");
-
 
             if (Program.HasMember(config, "SpamFilter")) //bcompat for older configurations
             {
@@ -214,10 +204,6 @@ namespace IRCRelay
                     }
                 }
             }
-
-            if (config.IRCLogMessages)
-                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "4. " + formatted, "log.txt");
-
 
             // Send IRC Message
             if (formatted.Length > 1000)
@@ -244,11 +230,7 @@ namespace IRCRelay
             }
 
             if (config.IRCLogMessages)
-                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "5. " + formatted, "log.txt");
-
-            if (config.IRCLogMessages)
                 LogManager.WriteLog(MsgSendType.DiscordToIRC, username, formatted, "log.txt");
-
 
 
             foreach (var attachment in message.Attachments)
