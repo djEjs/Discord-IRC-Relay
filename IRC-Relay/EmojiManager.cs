@@ -93,12 +93,16 @@ namespace IRCRelay.Emoji
 
         public void SaveEmoji(String emojiString, String simpleString)
         {
-            if(emojiMap.ContainsKey(emojiString))
+            if(emojiMap.ContainsKey(simpleString))
             {
-                if(emojiMap[emojiString] == simpleString)
+                if(emojiMap[simpleString] == emojiString)
                 {
                     return; //이미 존재하는 이모지
                 } 
+                else
+                {
+                    emojiMap.Remove(simpleString);
+                }
             }
             if (mainConfig.IRCLogMessages)
                 LogManager.WriteLog("[SaveEmoji] " + simpleString + " -> " + emojiString, "log.txt");
