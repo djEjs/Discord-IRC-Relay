@@ -243,7 +243,7 @@ namespace IRCRelay
         {
             string returnString = input;
 
-            Regex regex = new Regex("(?<!<):[A-Za-z0-9-_]+:");
+            Regex regex = new Regex("(?<!<[A-Za-z0-9-_]?):[A-Za-z0-9-_]+:");
 
             for (int i = 0; i < 10; i++) //최대 이모지 10개까지만 변환 가능(무한 루프 제거용)
             {
