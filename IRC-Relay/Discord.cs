@@ -26,6 +26,7 @@ using Discord.Net.Providers.WS4Net;
 using Discord.WebSocket;
 
 using IRCRelay.Logs;
+using IRCRelay.Emoji;
 using System.Net;
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
@@ -457,7 +458,7 @@ namespace IRCRelay
 
             Regex regex = new Regex("<[A-Za-z0-9-_]?:[A-Za-z0-9-_]+:[0-9]+>");
 
-            for (int i = 0; i < 10; i++) //최대 이모지 10개까지만 가능
+            for (int i = 0; i < 10; i++) //최대 이모지 10개까지만 가능(무한 루프 제거용)
             {
                 Match match = regex.Match(returnString);
                 if (match.Success) // contains a emoji
@@ -465,6 +466,7 @@ namespace IRCRelay
                     string substring = returnString.Substring(match.Index, match.Length);
                     string[] sections = substring.Split(':');
 
+                    EmojiManager.Instance.SaveEmoji(substring, ":" + sections[1] + ":");
                     returnString = returnString.Replace(substring, ":" + sections[1] + ":");
                 }
                 else

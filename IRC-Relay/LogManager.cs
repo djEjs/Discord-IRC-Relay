@@ -29,6 +29,31 @@ namespace IRCRelay.Logs
 
     public class LogManager
     {
+        public static void WriteLog(string message, string filename)
+        {
+            if (message.Trim().Length == 0)
+                return;
+
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine(" {0}", message);
+
+            try
+            {
+                string date = "[" + DateTime.Now.ToString(new CultureInfo("ko-KR")) + "]";
+                string logMessage = string.Format("{0} {1}", date, message);
+
+                using (StreamWriter stream = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + filename, true))
+                {
+                    stream.WriteLine(logMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error Writing To File: {0}", ex.Message);
+            }
+        }
+
+
         public static void WriteLog(MsgSendType type, string name, string message, string filename)
         {
             if (message.Trim().Length == 0)

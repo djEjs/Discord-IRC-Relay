@@ -21,6 +21,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Discord;
 using JsonConfig;
+using IRCRelay.Emoji;
 
 namespace IRCRelay
 {
@@ -39,6 +40,7 @@ namespace IRCRelay
                 Console.WriteLine("Startup failure: {0}", ex.Message);
                 Environment.Exit(0);
             }
+            EmojiManager.Instance.setConfig(config);
             StartSessions(config).GetAwaiter().GetResult();
         }
 
