@@ -21,17 +21,15 @@ using System.Globalization;
 using System.Collections.Generic;
 
 using IRCRelay.Logs;
+using JsonConfig;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Text;
 
 namespace IRCRelay.Emoji
 {
     public class EmojiManager
     {
-        private Dictionary<string, string> emojiMap = new Dictionary<string, string>();
-        private dynamic config;
-
-        private EmojiManager()
-        {
-        }
         public static EmojiManager Instance { get { return Nested.instance; } }
 
         private class Nested
@@ -42,17 +40,70 @@ namespace IRCRelay.Emoji
             }
         }
 
-        public void setConfig(dynamic config)
+        private Dictionary<string, string> emojiMap = new Dictionary<string, string>();
+        private dynamic mainConfig;
+        private const string file = "emoji.json";
+
+        private EmojiManager()
         {
-            this.config = config;
+            FileInfo fileInfo = new FileInfo(file);
+            if (fileInfo.Exists)
+            {
+                String txt;
+                using (StreamReader sw = new StreamReader(file))
+                {
+                    txt = sw.ReadToEnd();
+                }
+                var readJson = JObject.Parse(txt);
+
+                if (readJson["emoji"] != null)
+                {
+                    foreach (JObject jobj in readJson["emoji"])
+                    {
+                        emojiMap.Add(jobj["key"].ToString(), jobj["value"].ToString());
+                    }
+                }
+            }
         }
 
 
+        private void saveConfig()
+        {
+            var json = new JObject();
+            var jarray = new JArray();
+            foreach(var emoji in emojiMap)
+            {
+                var jsonChild = new JObject();
+                jsonChild.Add("key", emoji.Key);
+                jsonChild.Add("value", emoji.Value);
+                jarray.Add(jsonChild);
+            }
+            json.Add("emoji", jarray);
+
+            using (StreamWriter sw = new StreamWriter(file, false, Encoding.UTF8))
+            {
+                sw.Write(json.ToString());
+            }
+        }
+
+        public void setConfig(dynamic config)
+        {
+            this.mainConfig = config;
+        }
+
         public void SaveEmoji(String emojiString, String simpleString)
         {
-            if (config.IRCLogMessages)
+            if(emojiMap.ContainsKey(emojiString))
+            {
+                if(emojiMap[emojiString] == simpleString)
+                {
+                    return; //이미 존재하는 이모지
+                } 
+            }
+            if (mainConfig.IRCLogMessages)
                 LogManager.WriteLog("[SaveEmoji] " + simpleString + " -> " + emojiString, "log.txt");
             emojiMap.Add(simpleString, emojiString);
+            saveConfig();
         }
 
         public String ReplaceEmoji(String simpleString)
