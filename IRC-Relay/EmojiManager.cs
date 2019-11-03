@@ -26,7 +26,7 @@ namespace IRCRelay.Emoji
 {
     public class EmojiManager
     {
-        private Dictionary<string, string> emojiMap;
+        private Dictionary<string, string> emojiMap = new Dictionary<string, string>();
         private dynamic config;
 
         private EmojiManager()
