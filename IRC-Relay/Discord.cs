@@ -143,6 +143,34 @@ namespace IRCRelay
 
                 string[] msg_split = formatted.Split(' ');
 
+                // 추가중
+                if (msg_split[0] == "~콘")
+                {
+                    string DCCON_HOME_URL = "https://dccon.dcinside.com/";
+                    string DCCON_SEARCH_URL = "https://dccon.dcinside.com/hot/1/title/";
+                    string DCCON_DETAILS_URL = "https://dccon.dcinside.com/index/package_detail";
+
+                    if(msg_split[1] == "검색")
+                    {
+                        if(msg_split.Length <= 2)
+                        {
+                            session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL);
+                            return;
+                        }
+                        else
+                        {
+							var len = msg_split.Length;
+							var str = "";
+							for(int i = 2; i < len; i++)
+							{
+								str += msg_split[i] + ' ';
+							}
+                            session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + str.TrimEnd());
+                            return;
+                        }
+                    }
+                }
+
                 if (msg_split[0] == "!아얄")
                 {
                     string nickname_list = "";
