@@ -184,7 +184,7 @@ namespace IRCRelay
 
 						str = str.TrimEnd();
 
-						var encode = WebUtility.HtmlEncode(str);
+						var encode = WebUtility.UrlEncode(str);
 
 						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + encode);
 					}
