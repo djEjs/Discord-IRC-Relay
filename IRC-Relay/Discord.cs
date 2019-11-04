@@ -154,6 +154,7 @@ namespace IRCRelay
 					if (len == 1)
 					{
 						var info = "~콘 명령어 사용 : ~콘 간단 꼬우신 || ~콘 간단 우중콘 09 꼬우신";
+						session.SendMessage(Session.TargetBot.Discord, info);
 						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL);
 						return;
 					}
