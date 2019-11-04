@@ -155,7 +155,7 @@ namespace IRCRelay
 					var len = msg_split.Length;
 					if (len == 1)
 					{
-						var info = "~콘 명령어 사용 : ~콘 간단 꼬우신 || ~콘 간단 우중콘 09 꼬우신";
+						var info = "~콘 명령어 사용 : **~콘 간단 꼬우신** or **~콘 간단 우중콘 09 꼬우신**";
 						session.SendMessage(Session.TargetBot.Discord, info);
 						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL);
 						return;
@@ -174,17 +174,12 @@ namespace IRCRelay
                     }
 					else if(len > 3)
 					{
-
 						var str = "";
 
 						for (int i = 1; i < len - 1; i++)
-						{
 							str += msg_split[i] + ' ';
-						}
 
-						str = str.TrimEnd();
-
-						str = str.Replace(" ", "%20");
+						str = str.TrimEnd().Replace(" ", "%20");
 
 						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + str);
 					}
