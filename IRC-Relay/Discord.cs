@@ -184,9 +184,9 @@ namespace IRCRelay
 
 						str = str.TrimEnd();
 
-						var encode = WebUtility.UrlEncode(str);
+						str = str.Replace(" ", "%20");
 
-						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + encode);
+						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + str);
 					}
                 }
 
