@@ -150,25 +150,36 @@ namespace IRCRelay
                     string DCCON_SEARCH_URL = "https://dccon.dcinside.com/hot/1/title/";
                     string DCCON_DETAILS_URL = "https://dccon.dcinside.com/index/package_detail";
 
-                    if(msg_split[1] == "검색")
-                    {
-                        if(msg_split.Length <= 2)
-                        {
-                            session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL);
-                            return;
-                        }
-                        else
-                        {
-							var len = msg_split.Length;
-							var str = "";
-							for(int i = 2; i < len; i++)
-							{
-								str += msg_split[i] + ' ';
-							}
-                            session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + str.TrimEnd());
-                            return;
-                        }
+					var len = msg_split.Length;
+					if (len == 1)
+					{
+						var info = "~콘 명령어 사용 : ~콘 간단 꼬우신 || ~콘 간단 우중콘 09 꼬우신";
+						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL);
+						return;
+					}
+					if (len == 2)
+					{
+						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + msg_split[1]);
+						return;
+					}
+					// 검색어 : msg_split[1] ~ [len - 2]
+					// 인덱스 : msg_split[len - 1]
+					else if (len == 3)
+					{
+						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + msg_split[1]);
+						return;
                     }
+					else if(len > 3)
+					{
+
+						var str = "";
+
+						for (int i = 1; i < len - 1; i++)
+						{
+							str += msg_split[i] + ' ';
+						}
+						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + str.TrimEnd());
+					}
                 }
 
                 if (msg_split[0] == "!아얄")
