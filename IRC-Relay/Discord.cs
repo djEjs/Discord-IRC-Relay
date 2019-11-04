@@ -36,6 +36,8 @@ using System.Net.Http;
 using System.Collections;
 using Meebey.SmartIrc4net;
 
+using System.Web;
+
 namespace IRCRelay
 {
     class Discord : IDisposable
@@ -179,7 +181,12 @@ namespace IRCRelay
 						{
 							str += msg_split[i] + ' ';
 						}
-						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + str.TrimEnd());
+
+						str = str.TrimEnd();
+
+						var encode = WebUtility.HtmlEncode(str);
+
+						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + encode);
 					}
                 }
 
