@@ -133,7 +133,7 @@ namespace IRCRelay
 				if (username.Equals(this.config.IRCNick))
 					return;
 
-				if (e.Data.Type == ReceiveType.Join)
+				if (e.Data.Type == ReceiveType.Quit)
 				{
 					session.SendMessage(Session.TargetBot.Discord, username + "님이 심비록채널에 패배하여 탈주하였습니다!");
 				}
