@@ -57,7 +57,7 @@ namespace IRCRelay
             ircClient.OnConnected += OnConnected;
             ircClient.OnError += this.OnError;
             ircClient.OnChannelMessage += this.OnChannelMessage;
-			ircClient.OnChannelNotice += this.OnChannelNotice;
+			ircClient.OnJoin += this.OnChannelNotice;
 			
 			random = new Random();
         }
