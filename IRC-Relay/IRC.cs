@@ -116,7 +116,7 @@ namespace IRCRelay
 
 				string prefix = "";
 
-				var usr = e.Data.Irc.GetChannelUser(config.IRCChannel, username);
+				var usr = e.Data.Irc.GetChannelUser(config.IRCChannel, changename);
 				if (usr.IsOp)
 				{
 					prefix = "@";
