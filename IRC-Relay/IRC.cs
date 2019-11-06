@@ -117,7 +117,7 @@ namespace IRCRelay
 				if (username.Equals(this.config.IRCNick))
 					return;
 
-				session.SendMessage(Session.TargetBot.Discord, e.Data.Message);
+				session.SendMessage(Session.TargetBot.Discord, username + " : !닉 " + changename);
 			}
 			catch (Exception exception)
 			{
