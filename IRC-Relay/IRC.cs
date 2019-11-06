@@ -117,7 +117,7 @@ namespace IRCRelay
 				if (username.Equals(this.config.IRCNick))
 					return;
 
-				session.SendMessage(Session.TargetBot.Discord, "누가 " + username + " 소리를 내었는가? 짐은 " + changename + " 이니라");
+				session.SendMessage(Session.TargetBot.Discord, e.Data.Message);
 			}
 			catch (Exception exception)
 			{
