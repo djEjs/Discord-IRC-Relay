@@ -60,6 +60,7 @@ namespace IRCRelay
 			ircClient.OnJoin += this.OnChannelJoin;
 			ircClient.OnQuit += this.OnChannelQuit;
 			ircClient.OnChannelNotice += this.OnChannelNotice;
+			ircClient.OnNickChange += this.OnNickChange;
 
 			random = new Random();
         }
@@ -103,6 +104,27 @@ namespace IRCRelay
             Discord.Log(new LogMessage(LogSeverity.Critical, "IRCOnError", e.ErrorMessage));
         }
 
+		private void OnNickChange(object sender, NickChangeEventArgs e)
+		{
+			string username = "";
+			string changename = "";
+			string msg = "";
+			try
+			{
+				username = e.OldNickname;
+				changename = e.NewNickname;
+
+				if (username.Equals(this.config.IRCNick))
+					return;
+
+				session.SendMessage(Session.TargetBot.Discord, "누가 " + username + " 소리를 내었는가? 짐은 " + changename + " 이니라");
+			}
+			catch (Exception exception)
+			{
+				if (config.IRCLogMessages)
+					LogManager.WriteLog(MsgSendType.IRCToDiscord, username, msg + "->[Exception caught]" + exception.ToString(), "log.txt");
+			}
+		}
 		private void OnChannelNotice(object sender, IrcEventArgs e)
 		{
 			string username = "";
