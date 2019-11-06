@@ -114,7 +114,7 @@ namespace IRCRelay
 
 				if (e.Data.Type == ReceiveType.Join)
 				{
-					session.SendMessage(Session.TargetBot.Discord, username + "님이 심비록 채널에 도전장을 내밀었습니다!");
+					session.SendMessage(Session.TargetBot.Discord, username + " 님이 심비록 채널에 도전장을 내밀었습니다!");
 				}
 			}
 			catch (Exception exception)
@@ -135,7 +135,7 @@ namespace IRCRelay
 
 				if (e.Data.Type == ReceiveType.Quit)
 				{
-					session.SendMessage(Session.TargetBot.Discord, username + "님이 심비록채널에 패배하여 탈주하였습니다!");
+					session.SendMessage(Session.TargetBot.Discord, username + " Destroyed!");
 				}
 			}
 			catch (Exception exception)
