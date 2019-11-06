@@ -57,6 +57,7 @@ namespace IRCRelay
             ircClient.OnConnected += OnConnected;
             ircClient.OnError += this.OnError;
             ircClient.OnChannelMessage += this.OnChannelMessage;
+			ircClient.OnChannelNotice += this.OnChannelNotice;
 			
 			random = new Random();
         }
@@ -100,7 +101,28 @@ namespace IRCRelay
             Discord.Log(new LogMessage(LogSeverity.Critical, "IRCOnError", e.ErrorMessage));
         }
 
-        private void OnChannelMessage(object sender, IrcEventArgs e)
+		private void OnChannelNotice(object sender, IrcEventArgs e)
+		{
+			string username = "";
+			string msg = "";
+			try
+			{
+				username = e.Data.Nick;
+				if (username.Equals(this.config.IRCNick))
+					return;
+
+				if (e.Data.Type == ReceiveType.Join)
+				{
+					session.SendMessage(Session.TargetBot.Discord, username + "님이 심비록 채널에 도전장을 내밀었습니다!");
+				}
+			}
+			catch (Exception exception)
+			{
+				if (config.IRCLogMessages)
+					LogManager.WriteLog(MsgSendType.IRCToDiscord, username, msg + "->[Exception caught]" + exception.ToString(), "log.txt");
+			}
+		}
+		private void OnChannelMessage(object sender, IrcEventArgs e)
         {
             string username = "";
             string msg = "";
@@ -111,10 +133,6 @@ namespace IRCRelay
                 if (username.Equals(this.config.IRCNick))
                     return;
 
-				if (e.Data.Type == ReceiveType.Join)
-				{
-					session.SendMessage(Session.TargetBot.Discord, username + "님이 심비록 채널에 도전장을 내밀었습니다!");
-				}
 				if (Program.HasMember(config, "IRCNameBlacklist")) //bcompat for older configurations
                 {
                     /**
