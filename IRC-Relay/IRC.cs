@@ -59,6 +59,7 @@ namespace IRCRelay
             ircClient.OnChannelMessage += this.OnChannelMessage;
 			ircClient.OnJoin += this.OnChannelJoin;
 			ircClient.OnQuit += this.OnChannelQuit;
+			ircClient.OnChannelNotice += this.OnChannelNotice;
 
 			random = new Random();
         }
@@ -102,6 +103,24 @@ namespace IRCRelay
             Discord.Log(new LogMessage(LogSeverity.Critical, "IRCOnError", e.ErrorMessage));
         }
 
+		private void OnChannelNotice(object sender, IrcEventArgs e)
+		{
+			string username = "";
+			string msg = "";
+			try
+			{
+				username = e.Data.Nick;
+				if (username.Equals(this.config.IRCNick))
+					return;
+
+				session.SendMessage(Session.TargetBot.Discord, username + " : " + e.Data.Message);
+			}
+			catch (Exception exception)
+			{
+				if (config.IRCLogMessages)
+					LogManager.WriteLog(MsgSendType.IRCToDiscord, username, msg + "->[Exception caught]" + exception.ToString(), "log.txt");
+			}
+		}
 		private void OnChannelJoin(object sender, IrcEventArgs e)
 		{
 			string username = "";
