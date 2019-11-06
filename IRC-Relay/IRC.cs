@@ -114,10 +114,22 @@ namespace IRCRelay
 				username = e.OldNickname;
 				changename = e.NewNickname;
 
+				string prefix = "";
+
+				var usr = e.Data.Irc.GetChannelUser(config.IRCChannel, username);
+				if (usr.IsOp)
+				{
+					prefix = "@";
+				}
+				else if (usr.IsVoice)
+				{
+					prefix = "+";
+				}
+
 				if (username.Equals(this.config.IRCNick))
 					return;
 
-				session.SendMessage(Session.TargetBot.Discord, username + " : !닉 " + changename);
+				session.SendMessage(Session.TargetBot.Discord, "<" + prefix + username + "> !닉 " + changename);
 			}
 			catch (Exception exception)
 			{
@@ -223,6 +235,10 @@ namespace IRCRelay
 
                 string[] msg_split = msg.Split(' ');
 
+				if (msg_split[0] == "!닉")
+				{
+					return;
+				}
                 if (msg_split[0] == "!디코")
                 {
                     string userList = "";
