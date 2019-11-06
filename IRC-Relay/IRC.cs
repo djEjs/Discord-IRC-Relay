@@ -106,11 +106,16 @@ namespace IRCRelay
             string msg = "";
             try
             {
+
                 username = e.Data.Nick;
                 if (username.Equals(this.config.IRCNick))
                     return;
 
-                if (Program.HasMember(config, "IRCNameBlacklist")) //bcompat for older configurations
+				if (e.Data.Type == ReceiveType.Join)
+				{
+					session.SendMessage(Session.TargetBot.Discord, username + "님이 심비록 채널에 도전장을 내밀었습니다!");
+				}
+				if (Program.HasMember(config, "IRCNameBlacklist")) //bcompat for older configurations
                 {
                     /**
                      * We'll loop all blacklisted names, if the sender
