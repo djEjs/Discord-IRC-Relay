@@ -96,14 +96,16 @@ namespace IRCRelay
         public async Task OnDiscordConnected()
         {
             await Discord.Log(new LogMessage(LogSeverity.Critical, "DiscSpawn", "Discord bot initalized."));
-        }
+			session.SendMessage(Session.TargetBot.Discord, "Upgrade Complete");
+		}
 
         /* When we disconnect from discord (we got booted off), we'll remake */
         public async Task OnDiscordDisconnect(Exception ex)
         {
-            /* Create a new thread to kill the session. We cannot block
+			/* Create a new thread to kill the session. We cannot block
              * this Disconnect call */
-            new System.Threading.Thread(async() => { await session.Kill(Session.TargetBot.Discord); }).Start();
+			session.SendMessage(Session.TargetBot.Discord, "-다음장-");
+			new System.Threading.Thread(async() => { await session.Kill(Session.TargetBot.Discord); }).Start();
 
             await Log(new LogMessage(LogSeverity.Critical, "OnDiscordDisconnect", ex.Message));
         }
