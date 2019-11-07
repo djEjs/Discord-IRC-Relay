@@ -21,80 +21,81 @@ using Discord;
 
 namespace IRCRelay
 {
-    public class Session
-    {
-        public enum TargetBot {
-            Discord,
-            IRC,
-            Both
-        };
+	public class Session
+	{
+		public enum TargetBot
+		{
+			Discord,
+			IRC,
+			Both
+		};
 
-        private Discord discord;
-        private IRC irc;
-        private dynamic config;
-        private bool alive;
+		private Discord discord;
+		private IRC irc;
+		private dynamic config;
+		private bool alive;
 
-        public bool IsAlive { get => alive; }
-        public IRC Irc { get => irc; }
-        internal Discord Discord { get => discord; }
+		public bool IsAlive { get => alive; }
+		public IRC Irc { get => irc; }
+		internal Discord Discord { get => discord; }
 
-        public Session(dynamic config)
-        {
-            this.config = config;
-            alive = true;
-        }
+		public Session(dynamic config)
+		{
+			this.config = config;
+			alive = true;
+		}
 
-        public async Task Kill(TargetBot bot)
-        {
-            switch (bot)
-            {
-                case TargetBot.Discord:
-                    discord.Kill();
-                    await Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "Discord connection closed."));
-                    new Thread(async() =>
-                    {
-                        Thread.Sleep(System.TimeSpan.FromSeconds(1).Milliseconds);
-                        this.discord = new Discord(config, this);
-                        await discord.SpawnBot();
-                    }).Start();
-                    break;
-                case TargetBot.IRC:
-                    irc.Client.RfcQuit();
-                    await irc.SpawnBot();
-                    await Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "IRC connection closed."));
-                    break;
-                case TargetBot.Both: // if we kill both, let main loop recover
-                    discord.Kill();
-                    irc.Client.RfcQuit();
-                    this.alive = false;
-                    await Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "Discord connection closed."));
-                    break;
-            }
+		public async Task Kill(TargetBot bot)
+		{
+			switch (bot)
+			{
+				case TargetBot.Discord:
+					discord.Kill();
+					await Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "Discord connection closed."));
+					new Thread(async () =>
+					{
+						Thread.Sleep(System.TimeSpan.FromSeconds(1).Milliseconds);
+						this.discord = new Discord(config, this);
+						await discord.SpawnBot();
+					}).Start();
+					break;
+				case TargetBot.IRC:
+					irc.Client.RfcQuit();
+					await irc.SpawnBot();
+					await Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "IRC connection closed."));
+					break;
+				case TargetBot.Both: // if we kill both, let main loop recover
+					discord.Kill();
+					irc.Client.RfcQuit();
+					this.alive = false;
+					await Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "Discord connection closed."));
+					break;
+			}
 
-            this.alive = false;
-        }
+			this.alive = false;
+		}
 
-        public async Task StartSession()
-        {
-            this.discord = new Discord(config, this);
-            this.irc = new IRC(config, this);
+		public async Task StartSession()
+		{
+			this.discord = new Discord(config, this);
+			this.irc = new IRC(config, this);
 
-            await Discord.Log(new LogMessage(LogSeverity.Critical, "StartSesh", "Session started."));
-            await discord.SpawnBot();
-            await irc.SpawnBot();
-        }
+			await Discord.Log(new LogMessage(LogSeverity.Critical, "StartSesh", "Session started."));
+			await discord.SpawnBot();
+			await irc.SpawnBot();
+		}
 
-        public void SendMessage(TargetBot dest, string message, string username = "")
-        {
-            switch (dest)
-            {
-                case TargetBot.Discord:
-                    discord.SendMessageAllToTarget(config.DiscordGuildName, message, config.DiscordChannelName);
-                    break;
-                case TargetBot.IRC:
-                    irc.SendMessage(username, message);
-                    break;
-            }
-        }
-    }
+		public void SendMessage(TargetBot dest, string message, string username = "")
+		{
+			switch (dest)
+			{
+				case TargetBot.Discord:
+					discord.SendMessageAllToTarget(config.DiscordGuildName, message, config.DiscordChannelName);
+					break;
+				case TargetBot.IRC:
+					irc.SendMessage(username, message);
+					break;
+			}
+		}
+	}
 }

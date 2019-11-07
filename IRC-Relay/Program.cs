@@ -25,38 +25,38 @@ using IRCRelay.Emoji;
 
 namespace IRCRelay
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            dynamic config = null;
-            Console.Title = "Discord IRC Relay (c) Michael Flaherty 2018";
-            try
-            {
-                config = Config.ApplyJson(new StreamReader("settings.json").ReadToEnd(), new ConfigObject());
-            }
-            catch (FileNotFoundException ex)
-            {
-                Console.WriteLine("Startup failure: {0}", ex.Message);
-                Environment.Exit(0);
-            }
-            EmojiManager.Instance.setConfig(config);
-            StartSessions(config).GetAwaiter().GetResult();
-        }
+	public class Program
+	{
+		public static void Main(string[] args)
+		{
+			dynamic config = null;
+			Console.Title = "Discord IRC Relay (c) Michael Flaherty 2018";
+			try
+			{
+				config = Config.ApplyJson(new StreamReader("settings.json").ReadToEnd(), new ConfigObject());
+			}
+			catch (FileNotFoundException ex)
+			{
+				Console.WriteLine("Startup failure: {0}", ex.Message);
+				Environment.Exit(0);
+			}
+			EmojiManager.Instance.setConfig(config);
+			StartSessions(config).GetAwaiter().GetResult();
+		}
 
-        private static async Task StartSessions(dynamic config)
-        {
-            Session session = new Session(config);
-            do
-            {
-                await session.StartSession();
-                await Discord.Log(new LogMessage(LogSeverity.Critical, "Main", "Session officially over. Starting new..."));
-            } while (!session.IsAlive);   
-        }
+		private static async Task StartSessions(dynamic config)
+		{
+			Session session = new Session(config);
+			do
+			{
+				await session.StartSession();
+				await Discord.Log(new LogMessage(LogSeverity.Critical, "Main", "Session officially over. Starting new..."));
+			} while (!session.IsAlive);
+		}
 
-        public static bool HasMember(dynamic obj, string name)
-        {
-            return obj.GetType().GetMember(name) != null;
-        }
-    }
+		public static bool HasMember(dynamic obj, string name)
+		{
+			return obj.GetType().GetMember(name) != null;
+		}
+	}
 }

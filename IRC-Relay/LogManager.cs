@@ -21,74 +21,74 @@ using System.Globalization;
 
 namespace IRCRelay.Logs
 {
-    public enum MsgSendType
-    {
-        DiscordToIRC,
-        IRCToDiscord
-    };
+	public enum MsgSendType
+	{
+		DiscordToIRC,
+		IRCToDiscord
+	};
 
-    public class LogManager
-    {
-        public static void WriteLog(string message, string filename)
-        {
-            if (message.Trim().Length == 0)
-                return;
+	public class LogManager
+	{
+		public static void WriteLog(string message, string filename)
+		{
+			if (message.Trim().Length == 0)
+				return;
 
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine(" {0}", message);
+			Console.ForegroundColor = ConsoleColor.Gray;
+			Console.WriteLine(" {0}", message);
 
-            try
-            {
-                string date = "[" + DateTime.Now.ToString(new CultureInfo("ko-KR")) + "]";
-                string logMessage = string.Format("{0} {1}", date, message);
+			try
+			{
+				string date = "[" + DateTime.Now.ToString(new CultureInfo("ko-KR")) + "]";
+				string logMessage = string.Format("{0} {1}", date, message);
 
-                using (StreamWriter stream = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + filename, true))
-                {
-                    stream.WriteLine(logMessage);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error Writing To File: {0}", ex.Message);
-            }
-        }
+				using (StreamWriter stream = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + filename, true))
+				{
+					stream.WriteLine(logMessage);
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("Error Writing To File: {0}", ex.Message);
+			}
+		}
 
 
-        public static void WriteLog(MsgSendType type, string name, string message, string filename)
-        {
-            if (message.Trim().Length == 0)
-                return;
+		public static void WriteLog(MsgSendType type, string name, string message, string filename)
+		{
+			if (message.Trim().Length == 0)
+				return;
 
-            string prefix;
-            if (type == MsgSendType.DiscordToIRC)
-            {
-                prefix = "[Discord]";
-            }
-            else
-            {
-                prefix = "[IRC]";
-            }
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.Write(prefix);
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write(" <{0}>", name);
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine(" {0}", message);
+			string prefix;
+			if (type == MsgSendType.DiscordToIRC)
+			{
+				prefix = "[Discord]";
+			}
+			else
+			{
+				prefix = "[IRC]";
+			}
+			Console.ForegroundColor = ConsoleColor.Green;
+			Console.Write(prefix);
+			Console.ForegroundColor = ConsoleColor.White;
+			Console.Write(" <{0}>", name);
+			Console.ForegroundColor = ConsoleColor.Gray;
+			Console.WriteLine(" {0}", message);
 
-            try
-            {
-                string date = "[" + DateTime.Now.ToString(new CultureInfo("ko-KR")) + "]";
-                string logMessage = string.Format("{0} {1} <{2}> {3}", date, prefix, name, message);
+			try
+			{
+				string date = "[" + DateTime.Now.ToString(new CultureInfo("ko-KR")) + "]";
+				string logMessage = string.Format("{0} {1} <{2}> {3}", date, prefix, name, message);
 
-                using (StreamWriter stream = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + filename, true))
-                {
-                    stream.WriteLine(logMessage);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error Writing To File: {0}", ex.Message);
-            }
-        }
-    }
+				using (StreamWriter stream = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + filename, true))
+				{
+					stream.WriteLine(logMessage);
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("Error Writing To File: {0}", ex.Message);
+			}
+		}
+	}
 }

@@ -28,98 +28,98 @@ using System.Text;
 
 namespace IRCRelay.Emoji
 {
-    public class EmojiManager
-    {
-        public static EmojiManager Instance { get { return Nested.instance; } }
+	public class EmojiManager
+	{
+		public static EmojiManager Instance { get { return Nested.instance; } }
 
-        private class Nested
-        {
-            internal static readonly EmojiManager instance = new EmojiManager();
-            static Nested()
-            {
-            }
-        }
+		private class Nested
+		{
+			internal static readonly EmojiManager instance = new EmojiManager();
+			static Nested()
+			{
+			}
+		}
 
-        private Dictionary<string, string> emojiMap = new Dictionary<string, string>();
-        private dynamic mainConfig;
-        private const string file = "emoji.json";
+		private Dictionary<string, string> emojiMap = new Dictionary<string, string>();
+		private dynamic mainConfig;
+		private const string file = "emoji.json";
 
-        private EmojiManager()
-        {
-            FileInfo fileInfo = new FileInfo(file);
-            if (fileInfo.Exists)
-            {
-                String txt;
-                using (StreamReader sw = new StreamReader(file))
-                {
-                    txt = sw.ReadToEnd();
-                }
-                var readJson = JObject.Parse(txt);
+		private EmojiManager()
+		{
+			FileInfo fileInfo = new FileInfo(file);
+			if (fileInfo.Exists)
+			{
+				String txt;
+				using (StreamReader sw = new StreamReader(file))
+				{
+					txt = sw.ReadToEnd();
+				}
+				var readJson = JObject.Parse(txt);
 
-                if (readJson["emoji"] != null)
-                {
-                    foreach (JObject jobj in readJson["emoji"])
-                    {
-                        emojiMap.Add(jobj["key"].ToString(), jobj["value"].ToString());
-                    }
-                }
-            }
-        }
+				if (readJson["emoji"] != null)
+				{
+					foreach (JObject jobj in readJson["emoji"])
+					{
+						emojiMap.Add(jobj["key"].ToString(), jobj["value"].ToString());
+					}
+				}
+			}
+		}
 
 
-        private void saveConfig()
-        {
-            var json = new JObject();
-            var jarray = new JArray();
-            foreach(var emoji in emojiMap)
-            {
-                var jsonChild = new JObject();
-                jsonChild.Add("key", emoji.Key);
-                jsonChild.Add("value", emoji.Value);
-                jarray.Add(jsonChild);
-            }
-            json.Add("emoji", jarray);
+		private void saveConfig()
+		{
+			var json = new JObject();
+			var jarray = new JArray();
+			foreach (var emoji in emojiMap)
+			{
+				var jsonChild = new JObject();
+				jsonChild.Add("key", emoji.Key);
+				jsonChild.Add("value", emoji.Value);
+				jarray.Add(jsonChild);
+			}
+			json.Add("emoji", jarray);
 
-            using (StreamWriter sw = new StreamWriter(file, false, Encoding.UTF8))
-            {
-                sw.Write(json.ToString());
-            }
-        }
+			using (StreamWriter sw = new StreamWriter(file, false, Encoding.UTF8))
+			{
+				sw.Write(json.ToString());
+			}
+		}
 
-        public void setConfig(dynamic config)
-        {
-            this.mainConfig = config;
-        }
+		public void setConfig(dynamic config)
+		{
+			this.mainConfig = config;
+		}
 
-        public void SaveEmoji(String emojiString, String simpleString)
-        {
-            if(emojiMap.ContainsKey(simpleString))
-            {
-                if(emojiMap[simpleString] == emojiString)
-                {
-                    return; //이미 존재하는 이모지
-                } 
-                else
-                {
-                    emojiMap.Remove(simpleString);
-                }
-            }
-            if (mainConfig.IRCLogMessages)
-                LogManager.WriteLog("[SaveEmoji] " + simpleString + " -> " + emojiString, "log.txt");
-            emojiMap.Add(simpleString, emojiString);
-            saveConfig();
-        }
+		public void SaveEmoji(String emojiString, String simpleString)
+		{
+			if (emojiMap.ContainsKey(simpleString))
+			{
+				if (emojiMap[simpleString] == emojiString)
+				{
+					return; //이미 존재하는 이모지
+				}
+				else
+				{
+					emojiMap.Remove(simpleString);
+				}
+			}
+			if (mainConfig.IRCLogMessages)
+				LogManager.WriteLog("[SaveEmoji] " + simpleString + " -> " + emojiString, "log.txt");
+			emojiMap.Add(simpleString, emojiString);
+			saveConfig();
+		}
 
-        public String ReplaceEmoji(String simpleString)
-        {
-            if(emojiMap.ContainsKey(simpleString))
-            {
-                return emojiMap[simpleString];
-            }
-            else
-            {
-                return simpleString;
-            }
-        }
-    }
+		public String ReplaceEmoji(String simpleString)
+		{
+			if (emojiMap.ContainsKey(simpleString))
+			{
+				return emojiMap[simpleString];
+			}
+			else
+			{
+				return simpleString;
+			}
+		}
+	}
 }
