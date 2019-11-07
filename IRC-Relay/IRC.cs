@@ -37,7 +37,23 @@ namespace IRCRelay
         private IrcClient ircClient;
 		private Random random;
 
-        public IrcClient Client { get => ircClient; set => ircClient = value; }
+		private int JoinMsgsLen;
+		static private List<string> JoinMsgs = new List<string>()
+		{
+			" 님이 심비록 채널에 도전장을 내밀었습니다!",
+			" 님이 강림하셨습니다!",
+			" 님의 생산이 완료 되었습니다",
+		};
+
+		private int QuitMsgsLen;
+		static private List<string> QuitMsgs = new List<string>()
+		{
+			" 님이 쓸쓸히 퇴장합니다...",
+			" Destroyed!",
+			" 님이 파괴되었습니다.",
+		};
+
+		public IrcClient Client { get => ircClient; set => ircClient = value; }
 
         public IRC(dynamic config, Session session)
         {
@@ -63,7 +79,9 @@ namespace IRCRelay
 			ircClient.OnNickChange += this.OnNickChange;
 
 			random = new Random();
-        }
+			JoinMsgsLen = JoinMsgs.Count;
+			QuitMsgsLen = QuitMsgs.Count;
+		}
 
         public void SendMessage(string username, string message)
         {
@@ -161,13 +179,14 @@ namespace IRCRelay
 			string msg = "";
 			try
 			{
+
 				username = e.Data.Nick;
 				if (username.Equals(this.config.IRCNick))
 					return;
 
 				if (e.Data.Type == ReceiveType.Join)
 				{
-					session.SendMessage(Session.TargetBot.Discord, username + " 님이 심비록 채널에 도전장을 내밀었습니다!");
+					session.SendMessage(Session.TargetBot.Discord, username + JoinMsgs[random.Next(JoinMsgsLen)]);
 				}
 			}
 			catch (Exception exception)
@@ -188,7 +207,7 @@ namespace IRCRelay
 
 				if (e.Data.Type == ReceiveType.Quit)
 				{
-					session.SendMessage(Session.TargetBot.Discord, username + " Destroyed!");
+					session.SendMessage(Session.TargetBot.Discord, username + QuitMsgs[random.Next(QuitMsgsLen)]);
 				}
 			}
 			catch (Exception exception)
