@@ -73,11 +73,24 @@ namespace IRCRelay
             client.MessageReceived += OnDiscordMessage;
             client.Connected += OnDiscordConnected;
             client.Disconnected += OnDiscordDisconnect;
-			
+			client.MessageUpdated += OnDiscordMsgUpdate;
+			client.ReactionAdded += OnDiscordReactionAdded;
+
 			random = new Random();
         }
 
-        public async Task SpawnBot()
+		private Task OnDiscordReactionAdded(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
+		{
+
+			return null;
+		}
+
+		private async Task OnDiscordMsgUpdate(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
+		{
+			await session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, arg3.Name + " : " + arg3.CachedMessages + " / " + arg3.CreatedAt);
+		}
+
+		public async Task SpawnBot()
         {
             await client.LoginAsync(TokenType.Bot, config.DiscordBotToken);
             await client.StartAsync();
