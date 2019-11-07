@@ -96,7 +96,6 @@ namespace IRCRelay
         public async Task OnDiscordConnected()
         {
             await Discord.Log(new LogMessage(LogSeverity.Critical, "DiscSpawn", "Discord bot initalized."));
-			session.SendMessage(Session.TargetBot.Discord, "Upgrade Complete");
 		}
 
         /* When we disconnect from discord (we got booted off), we'll remake */

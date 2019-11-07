@@ -42,7 +42,8 @@ namespace IRCRelay
 		{
 			" 님이 심비록 채널에 도전장을 내밀었습니다!",
 			" 님이 강림하셨습니다!",
-			" 님의 생산이 완료 되었습니다",
+			" 님이 입장하셨습니다.",
+			" 님이 소환되었습니다!",
 		};
 
 		private int QuitMsgsLen;
@@ -51,6 +52,7 @@ namespace IRCRelay
 			" 님이 쓸쓸히 퇴장합니다...",
 			" Destroyed!",
 			" 님이 파괴되었습니다.",
+			" 소환 해제",
 		};
 
 		public IrcClient Client { get => ircClient; set => ircClient = value; }
