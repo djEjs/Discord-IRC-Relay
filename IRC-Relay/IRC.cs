@@ -57,6 +57,7 @@ namespace IRCRelay
 			" 소환 해제",
 			" 님이 탈주했습니다!",
 			" 님이 폭★발 했습니다!",
+			" 님이 하늘로 승천하고 있습니다. 그를 위해 X를 눌러 조의를 표하십시오.",
 		};
 
 		public IrcClient Client { get => ircClient; set => ircClient = value; }
