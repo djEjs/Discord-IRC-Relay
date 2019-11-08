@@ -44,6 +44,8 @@ namespace IRCRelay
 			" 님이 강림하셨습니다!",
 			" 님이 입장하셨습니다.",
 			" 님이 소환되었습니다!",
+			" 님이 땅에서 솟아났습니다!",
+			" 님이 하늘에서 떨어졌습니다!",
 		};
 
 		private int QuitMsgsLen;
@@ -53,6 +55,8 @@ namespace IRCRelay
 			" Destroyed!",
 			" 님이 파괴되었습니다.",
 			" 소환 해제",
+			" 님이 탈주했습니다!",
+			" 님이 폭★발 했습니다!",
 		};
 
 		public IrcClient Client { get => ircClient; set => ircClient = value; }
