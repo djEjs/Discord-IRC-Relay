@@ -261,6 +261,13 @@ namespace IRCRelay
 
 				string[] msg_split = msg.Split(' ');
 
+				if (msg_split[0] == "!로그")
+				{
+					string sourcePath = AppDomain.CurrentDomain.BaseDirectory + @"\log.txt";
+					string targetPath = @"C:\AutoSet10\public_html\log\log.txt"; //임시로 상수로 박아봄
+					System.IO.File.Copy(sourcePath, targetPath, true);
+					session.SendMessage(Session.TargetBot.IRC, "http://joy1999.codns.com:8999/log/log.txt");
+				}
 				if (msg_split[0] == "!닉")
 				{
 					return;
