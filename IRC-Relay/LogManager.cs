@@ -79,8 +79,9 @@ namespace IRCRelay.Logs
 			{
 				string date = "[" + DateTime.Now.ToString(new CultureInfo("ko-KR")) + "]";
 				string logMessage = string.Format("{0} {1} <{2}> {3}", date, prefix, name, message);
+				System.Text.Encoding euckr = System.Text.Encoding.GetEncoding(51949);
 
-				using (StreamWriter stream = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + filename, true))
+				using (StreamWriter stream = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + filename, true, euckr))
 				{
 					stream.WriteLine(logMessage);
 				}
