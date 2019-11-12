@@ -46,6 +46,11 @@ namespace IRCRelay
 			" 님이 소환되었습니다!",
 			" 님이 땅에서 솟아났습니다!",
 			" 님이 하늘에서 떨어졌습니다!",
+			" 등장!! [★★★★★]",
+			" 등장! [★★★★]",
+			" 등장? [★★★]",
+			" 등장... [☆]",
+
 		};
 
 		private int QuitMsgsLen;
@@ -58,6 +63,7 @@ namespace IRCRelay
 			" 님이 탈주했습니다!",
 			" 님이 폭★발 했습니다!",
 			" 님이 하늘로 승천하고 있습니다. 그를 위해 X를 눌러 조의를 표하십시오.",
+			" 님이 코어 3개로 해체 되었습니다",
 		};
 
 		public IrcClient Client { get => ircClient; set => ircClient = value; }
