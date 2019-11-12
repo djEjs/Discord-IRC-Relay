@@ -155,7 +155,11 @@ namespace IRCRelay
 				formatted = Unescape(formatted);
 
 				string[] msg_split = formatted.Split(' ');
-
+				
+				if (msg_split[0] == "!예외")
+				{
+					throw new Exception("테스트용 예외");
+				}
 				if (msg_split[0] == "!로그")
 				{
 					string sourcePath = AppDomain.CurrentDomain.BaseDirectory + @"\log.txt";
