@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using Discord;
 using JsonConfig;
 using IRCRelay.Emoji;
+using IRCRelay.LearnDB;
 
 namespace IRCRelay
 {
@@ -41,6 +42,7 @@ namespace IRCRelay
 				Environment.Exit(0);
 			}
 			EmojiManager.Instance.setConfig(config);
+			LearnDBManager.Instance.setConfig(config);
 			StartSessions(config).GetAwaiter().GetResult();
 		}
 

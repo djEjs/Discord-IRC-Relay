@@ -27,6 +27,7 @@ using Discord.WebSocket;
 
 using IRCRelay.Logs;
 using IRCRelay.Emoji;
+using IRCRelay.LearnDB;
 using System.Net;
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
@@ -209,6 +210,54 @@ namespace IRCRelay
 						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + str);
 					}
 				}
+
+				if (msg_split[0] == "~저장")
+				{
+					if (msg_split.Length > 2)
+					{
+						var str = "";
+						for (int i = 2; i < msg_split.Length; i++)
+							str += msg_split[i] + ' ';
+
+						LearnDBManager.Instance.SaveString(msg_split[1], str);
+						var saveString = "\"" + msg_split[1] + "\" 저장했습니다.";
+						session.SendMessage(Session.TargetBot.Discord, saveString);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
+					}
+					else
+					{
+						var info = "~저장 명령어 사용법 예시: **~저장 기억단어 기억할말**";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+					}
+				}
+				if (msg_split[0] == "~알려")
+				{
+					if (msg_split.Length == 2)
+					{
+						string value = LearnDBManager.Instance.getString(msg_split[1]);
+
+						if(value == null)
+						{
+							var saveString = "\"" + msg_split[1] + "\" 존재하지 않는 단어입니다.";
+							session.SendMessage(Session.TargetBot.Discord, saveString);
+							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
+						} else
+						{
+							var saveString = msg_split[1] + " : " + value;
+							session.SendMessage(Session.TargetBot.Discord, saveString);
+							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
+
+						}
+					}
+					else
+					{
+						var info = "~알려 명령어 사용법 예시: **~알려 조이**";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+					}
+				}
+
 
 				if (msg_split[0] == "!아얄")
 				{
