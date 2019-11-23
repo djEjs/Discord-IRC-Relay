@@ -42,7 +42,7 @@ namespace IRCRelay
 				Environment.Exit(0);
 			}
 			EmojiManager.Instance.setConfig(config);
-			LearnDBManager.Instance.setConfig(config);
+			//LearnDBManager.Instance.setConfig(config);
 			StartSessions(config).GetAwaiter().GetResult();
 		}
 
