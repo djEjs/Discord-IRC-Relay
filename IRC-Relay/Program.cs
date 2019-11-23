@@ -23,6 +23,7 @@ using Discord;
 using JsonConfig;
 using IRCRelay.Emoji;
 using IRCRelay.LearnDB;
+using IRCRelay.Logs;
 
 namespace IRCRelay
 {
@@ -41,8 +42,24 @@ namespace IRCRelay
 				Console.WriteLine("Startup failure: {0}", ex.Message);
 				Environment.Exit(0);
 			}
-			EmojiManager.Instance.setConfig(config);
-			//LearnDBManager.Instance.setConfig(config);
+			try
+			{
+				EmojiManager.Instance.setConfig(config);
+			}
+			catch (Exception e)
+			{
+				if (config.IRCLogMessages)
+					LogManager.WriteLog("[Exception caught]" + e.ToString(), "log.txt");
+			}
+			try
+			{
+				LearnDBManager.Instance.setConfig(config);
+			}
+			catch (Exception e)
+			{
+				if (config.IRCLogMessages)
+					LogManager.WriteLog("[Exception caught]" + e.ToString(), "log.txt");
+			}
 			StartSessions(config).GetAwaiter().GetResult();
 		}
 
