@@ -41,6 +41,7 @@ namespace IRCRelay.Emoji
 		}
 
 		private Dictionary<string, string> emojiMap = new Dictionary<string, string>();
+		private Dictionary<string, int> emojiCountMap = new Dictionary<string, int>();
 		private dynamic mainConfig;
 		private const string file = "emoji.json";
 
@@ -61,6 +62,9 @@ namespace IRCRelay.Emoji
 					foreach (JObject jobj in readJson["emoji"])
 					{
 						emojiMap.Add(jobj["key"].ToString(), jobj["value"].ToString());
+						if(jobj.ContainsKey("count")) {
+							emojiCountMap[jobj["key"].ToString()] = Int32.Parse(jobj["count"].ToString());
+						}
 					}
 				}
 			}
@@ -76,6 +80,9 @@ namespace IRCRelay.Emoji
 				var jsonChild = new JObject();
 				jsonChild.Add("key", emoji.Key);
 				jsonChild.Add("value", emoji.Value);
+				if(emojiCountMap.ContainsKey(emoji.Key)) {
+					jsonChild.Add("count", emojiCountMap[emoji.Key]);
+				}
 				jarray.Add(jsonChild);
 			}
 			json.Add("emoji", jarray);
@@ -91,8 +98,22 @@ namespace IRCRelay.Emoji
 			this.mainConfig = config;
 		}
 
+		public void AddEmojiCount(String emojiString)
+		{
+			if(emojiCountMap.TryGetValue(emojiString, out result))
+			{
+				emojiCountMap.Remove(emojiString);
+				emojiCountMap.Add(emojiString, result+1);
+			}
+			else
+			{
+				emojiCountMap.Add(emojiString, 1);
+			}
+		}
+		
 		public void SaveEmoji(String emojiString, String simpleString)
 		{
+			AddEmojiCount(emojiString);
 			if (emojiMap.ContainsKey(simpleString))
 			{
 				if (emojiMap[simpleString] == emojiString)
@@ -120,6 +141,27 @@ namespace IRCRelay.Emoji
 			{
 				return simpleString;
 			}
+		}
+
+		public string printStatistics(int size)
+		{
+			int i = 1;
+			string returnString = "통계 - ";
+			foreach (var emoji in emojiCountMap)
+			{
+				returnString+= i;
+				returnString+= "위. ";
+				returnString += emoji.Key;
+				returnString += " (";
+				returnString += emoji.Value;
+				returnString += "회)  ";
+				i++;
+				size--;
+				if(size <= 0) {
+					break;
+				}
+			}
+			return returnString;
 		}
 	}
 }
