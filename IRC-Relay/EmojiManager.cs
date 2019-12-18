@@ -62,7 +62,7 @@ namespace IRCRelay.Emoji
 					foreach (JObject jobj in readJson["emoji"])
 					{
 						emojiMap.Add(jobj["key"].ToString(), jobj["value"].ToString());
-						if(jobj.ContainsKey("count")) {
+						if(jobj["count"] != null) {
 							emojiCountMap[jobj["key"].ToString()] = Int32.Parse(jobj["count"].ToString());
 						}
 					}
