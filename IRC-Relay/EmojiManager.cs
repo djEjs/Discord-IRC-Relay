@@ -63,7 +63,7 @@ namespace IRCRelay.Emoji
 					{
 						emojiMap.Add(jobj["key"].ToString(), jobj["value"].ToString());
 						if(jobj["count"] != null) {
-							emojiCountMap[jobj["key"].ToString()] = Int32.Parse(jobj["count"].ToString());
+							emojiCountMap[jobj["value"].ToString()] = Int32.Parse(jobj["count"].ToString());
 						}
 					}
 				}
@@ -80,8 +80,8 @@ namespace IRCRelay.Emoji
 				var jsonChild = new JObject();
 				jsonChild.Add("key", emoji.Key);
 				jsonChild.Add("value", emoji.Value);
-				if(emojiCountMap.ContainsKey(emoji.Key)) {
-					jsonChild.Add("count", emojiCountMap[emoji.Key]);
+				if(emojiCountMap.ContainsKey(emoji.Value)) {
+					jsonChild.Add("count", emojiCountMap[emoji.Value]);
 				}
 				jarray.Add(jsonChild);
 			}
@@ -147,6 +147,7 @@ namespace IRCRelay.Emoji
 		{
 			int i = 1;
 			string returnString = "";
+			var queryDesc = emojiCountMap.OrderByDescending(x => x.Value)
 			foreach (var emoji in emojiCountMap)
 			{
 				returnString+= i;

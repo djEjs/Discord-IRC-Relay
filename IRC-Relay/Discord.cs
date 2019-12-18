@@ -224,7 +224,6 @@ namespace IRCRelay
 					}
 					var str = EmojiManager.Instance.printStatistics(size);
 					session.SendMessage(Session.TargetBot.Discord, str);
-					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, str);
 				}
 
 				if (msg_split[0] == "~저장")
