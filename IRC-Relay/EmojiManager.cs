@@ -100,10 +100,10 @@ namespace IRCRelay.Emoji
 
 		public void AddEmojiCount(String emojiString)
 		{
-			if(emojiCountMap.TryGetValue(emojiString, out String result))
+			if(emojiCountMap.TryGetValue(emojiString, out int result))
 			{
 				emojiCountMap.Remove(emojiString);
-				emojiCountMap.Add(emojiString, Int32.Parse(result)+1);
+				emojiCountMap.Add(emojiString, result+1);
 			}
 			else
 			{
