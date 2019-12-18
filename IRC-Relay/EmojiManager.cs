@@ -147,7 +147,7 @@ namespace IRCRelay.Emoji
 		{
 			int i = 1;
 			string returnString = "";
-			var queryDesc = emojiCountMap.OrderByDescending(x => x.Value)
+			var queryDesc = emojiCountMap.OrderByDescending(x => x.Value);
 			foreach (var emoji in emojiCountMap)
 			{
 				returnString+= i;
