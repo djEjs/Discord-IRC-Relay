@@ -149,7 +149,7 @@ namespace IRCRelay.Emoji
 			int i = 1;
 			string returnString = "";
 			var queryDesc = emojiCountMap.OrderByDescending(x => x.Value);
-			foreach (var emoji in emojiCountMap)
+			foreach (var emoji in queryDesc)
 			{
 				returnString+= i;
 				returnString+= "위. ";
