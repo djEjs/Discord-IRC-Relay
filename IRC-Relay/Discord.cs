@@ -215,12 +215,12 @@ namespace IRCRelay
 				if (msg_split[0] == "~이모지")
 				{
 					int size = 5;
-					if (msg_split.Length > 2)
+					if (msg_split.Length >= 2)
 					{
 						size = Int32.Parse(msg_split[1]);
 					}
-					if(size >= 10) {
-						size = 10;
+					if(size >= 30) {
+						size = 30;
 					}
 					var str = EmojiManager.Instance.printStatistics(size);
 					session.SendMessage(Session.TargetBot.Discord, str);

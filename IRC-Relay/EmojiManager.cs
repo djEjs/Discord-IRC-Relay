@@ -146,7 +146,7 @@ namespace IRCRelay.Emoji
 		public string printStatistics(int size)
 		{
 			int i = 1;
-			string returnString = "통계 - ";
+			string returnString = "";
 			foreach (var emoji in emojiCountMap)
 			{
 				returnString+= i;
