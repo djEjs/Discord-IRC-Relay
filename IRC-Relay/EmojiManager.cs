@@ -119,6 +119,7 @@ namespace IRCRelay.Emoji
 			{
 				if (emojiMap[simpleString] == emojiString)
 				{
+					saveConfig();
 					return; //이미 존재하는 이모지
 				}
 				else
