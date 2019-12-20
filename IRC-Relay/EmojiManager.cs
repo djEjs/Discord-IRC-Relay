@@ -150,21 +150,25 @@ namespace IRCRelay.Emoji
 			int i = 1;
 			string returnString = "";
 			var queryDesc = emojiCountMap.OrderByDescending(x => x.Value);
-			foreach (var emoji in queryDesc)
+			for(int linecount = 0; linecount < 2; linecount++)
 			{
-				returnString += "**# ";
-				returnString += i.ToString("D2");
-				returnString += " #** ";
-				returnString += emoji.Key;
-				returnString += " **[";
-				returnString += emoji.Value;
-				returnString += " 회]**\n";
-				i++;
-				size--;
-				if (size <= 0)
+				foreach (var emoji in queryDesc)
 				{
-					break;
+					returnString += "**# ";
+					returnString += i.ToString("D2");
+					returnString += " #** ";
+					returnString += emoji.Key;
+					returnString += " **[";
+					returnString += emoji.Value.ToString("D3");
+					returnString += " 회]**        ";
+					i++;
+					size--;
+					if (size <= 0)
+					{
+						break;
+					}
 				}
+				returnString += "\n";
 			}
 			return returnString;
 		}
