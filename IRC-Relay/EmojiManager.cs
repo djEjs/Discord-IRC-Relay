@@ -152,7 +152,7 @@ namespace IRCRelay.Emoji
 			var queryDesc = emojiCountMap.OrderByDescending(x => x.Value);
 			foreach (var emoji in queryDesc)
 			{
-				for (int linecount = 0; linecount < 2 || size <= 0; linecount++)
+				for (int linecount = 0; linecount < 2; linecount++)
 				{
 					returnString += "**# ";
 					returnString += i.ToString("D2");
@@ -163,6 +163,10 @@ namespace IRCRelay.Emoji
 					returnString += " 회]**        ";
 					i++;
 					size--;
+					if (size <= 0)
+					{
+						break;
+					}
 				}
 				returnString += "\n";
 
