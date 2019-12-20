@@ -148,27 +148,26 @@ namespace IRCRelay.Emoji
 		public string printStatistics(int size)
 		{
 			int i = 1;
+			int linecount = 2;
 			string returnString = "";
 			var queryDesc = emojiCountMap.OrderByDescending(x => x.Value);
 			foreach (var emoji in queryDesc)
 			{
-				for (int linecount = 0; linecount < 2; linecount++)
+				returnString += "**# ";
+				returnString += i.ToString("D2");
+				returnString += " #** ";
+				returnString += emoji.Key;
+				returnString += " **[";
+				returnString += emoji.Value.ToString("D3");
+				returnString += " 회]**        ";
+				i++;
+				size--;
+				linecount--;
+				if(linecount <= 0)
 				{
-					returnString += "**# ";
-					returnString += i.ToString("D2");
-					returnString += " #** ";
-					returnString += emoji.Key;
-					returnString += " **[";
-					returnString += emoji.Value.ToString("D3");
-					returnString += " 회]**        ";
-					i++;
-					size--;
-					if (size <= 0)
-					{
-						break;
-					}
+					returnString += "\n";
+					linecount = 2;
 				}
-				returnString += "\n";
 
 				if (size <= 0)
 				{
