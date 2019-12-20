@@ -162,10 +162,10 @@ namespace IRCRelay.Emoji
 					returnString += emoji.Value.ToString("D3");
 					returnString += " 회]**        ";
 					i++;
+					size--;
 				}
 				returnString += "\n";
 
-				size--;
 				if (size <= 0)
 				{
 					break;
