@@ -150,9 +150,9 @@ namespace IRCRelay.Emoji
 			int i = 1;
 			string returnString = "";
 			var queryDesc = emojiCountMap.OrderByDescending(x => x.Value);
-			for(int linecount = 0; linecount < 2; linecount++)
+			foreach (var emoji in queryDesc)
 			{
-				foreach (var emoji in queryDesc)
+				for (int linecount = 0; linecount < 2; linecount++)
 				{
 					returnString += "**# ";
 					returnString += i.ToString("D2");
