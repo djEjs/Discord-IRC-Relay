@@ -98,6 +98,11 @@ namespace IRCRelay.Emoji
 		{
 			this.mainConfig = config;
 		}
+		
+		public void InitEmojiCount()
+		{
+			emojiCountMap.Clear();
+		}
 
 		public void AddEmojiCount(String emojiString)
 		{

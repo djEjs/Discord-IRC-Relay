@@ -211,7 +211,6 @@ namespace IRCRelay
 					}
 				}
 
-
 				if (msg_split[0] == "~이모지")
 				{
 					int size = 5;
@@ -219,11 +218,18 @@ namespace IRCRelay
 					{
 						size = Int32.Parse(msg_split[1]);
 					}
-					if(size >= 30) {
-						size = 30;
+					if(size >= 50) {
+						size = 50;
 					}
 					var str = EmojiManager.Instance.printStatistics(size);
 					session.SendMessage(Session.TargetBot.Discord, str);
+				}
+				if (msg_split[0] == "~이모지초기화")
+				{
+					EmojiManager.Instance.InitEmojiCount();
+					var info = "이모지 카운트를 초기화 했습니다.";
+					session.SendMessage(Session.TargetBot.Discord, info);
+					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 				}
 
 				if (msg_split[0] == "~저장")
