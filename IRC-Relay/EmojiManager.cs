@@ -156,6 +156,12 @@ namespace IRCRelay.Emoji
 			int linecount = 2;
 			string returnString = "";
 			var queryDesc = emojiCountMap.OrderByDescending(x => x.Value);
+			
+			if(size < 0) {
+				size *= -1;
+				queryDesc = emojiCountMap.OrderBy(x => x.Value);
+			}			
+			
 			foreach (var emoji in queryDesc)
 			{
 				returnString += "**# ";
