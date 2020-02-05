@@ -210,7 +210,11 @@ namespace IRCRelay
 						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + str);
 					}
 				}
-
+				if (msg_split[0] == "~이모지숙청")
+				{
+					// 숙청할단어 : msg_split[1]
+					EmojiManager.Instance.RemoveEmoji(msg_split[1]);
+				}
 				if (msg_split[0] == "~이모지")
 				{
 					int size = 5;

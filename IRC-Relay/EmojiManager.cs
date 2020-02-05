@@ -150,6 +150,18 @@ namespace IRCRelay.Emoji
 			}
 		}
 
+		public void RemoveEmoji(String simpleString)
+		{
+			if (emojiMap.ContainsKey(simpleString))
+			{
+				if (emojiCountMap.TryGetValue(emojiMap[simpleString], out int result))
+				{
+					emojiCountMap.Remove(emojiMap[simpleString]);
+					emojiCountMap.Add(emojiMap[simpleString], -999);
+				}
+			}
+		}
+
 		public string printStatistics(int size)
 		{
 			int i = 1;
