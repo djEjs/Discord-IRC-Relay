@@ -176,7 +176,9 @@ namespace IRCRelay.Emoji
 			
 			foreach (var emoji in queryDesc)
 			{
-				returnString += "**# ";
+				if(emoji.Value < 0) {
+					continue;
+				}				returnString += "**# ";
 				returnString += i.ToString("D2");
 				returnString += " #** ";
 				returnString += emoji.Key;
