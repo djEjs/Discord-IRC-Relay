@@ -316,7 +316,7 @@ namespace IRCRelay
 					}
 				}
 
-				if (msg_split[0] == "!로그")
+				if (msg_split[0] == "~로그")
 				{
 					string sourcePath = AppDomain.CurrentDomain.BaseDirectory + @"\log.txt";
 					string targetPath = @"C:\AutoSet10\public_html\log\log.txt"; //임시로 상수로 박아봄
@@ -327,7 +327,7 @@ namespace IRCRelay
 				{
 					return;
 				}
-				if (msg_split[0] == "!디코")
+				if (msg_split[0] == "~디코")
 				{
 					string userList = "";
 
@@ -363,7 +363,7 @@ namespace IRCRelay
 					ircClient.SendMessage(SendType.Message, config.IRCChannel, userList);
 				}
 
-				if (msg_split[0] == "!골라")
+				if (msg_split[0] == "~골라")
 				{
 					if (msg_split.Length > 2)
 					{

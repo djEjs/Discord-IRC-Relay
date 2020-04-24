@@ -158,11 +158,11 @@ namespace IRCRelay
 
 				string[] msg_split = formatted.Split(' ');
 				
-				if (msg_split[0] == "!예외")
+				if (msg_split[0] == "~예외")
 				{
 					throw new Exception("테스트용 예외");
 				}
-				if (msg_split[0] == "!로그")
+				if (msg_split[0] == "~로그")
 				{
 					string sourcePath = AppDomain.CurrentDomain.BaseDirectory + @"\log.txt";
 					string targetPath = @"C:\AutoSet10\public_html\log\log.txt"; //임시로 상수로 박아봄
@@ -284,7 +284,7 @@ namespace IRCRelay
 				}
 
 
-				if (msg_split[0] == "!아얄")
+				if (msg_split[0] == "~아얄")
 				{
 					string nickname_list = "";
 					string requested_channel = config.IRCChannel;
@@ -320,7 +320,7 @@ namespace IRCRelay
 					return;
 				}
 
-				if (msg_split[0] == "!골라")
+				if (msg_split[0] == "~골라")
 				{
 					if (msg_split.Length > 2)
 					{
