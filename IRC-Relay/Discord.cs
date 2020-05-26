@@ -157,7 +157,14 @@ namespace IRCRelay
 				formatted = Unescape(formatted);
 
 				string[] msg_split = formatted.Split(' ');
-				
+
+				if (msg_split[0] == "~아피")
+				{
+					string sourcePath = AppDomain.CurrentDomain.BaseDirectory + @"\log.txt";
+					string targetPath = @"C:\AutoSet10\public_html\log\log.txt"; //임시로 상수로 박아봄
+					System.IO.File.Copy(sourcePath, targetPath, true);
+					session.SendMessage(Session.TargetBot.Discord, "https://ip.pe.kr/");
+				}
 				if (msg_split[0] == "~예외")
 				{
 					throw new Exception("테스트용 예외");
