@@ -233,7 +233,9 @@ namespace IRCRelay
 						size = 50;
 					}
 					var str = EmojiManager.Instance.printStatistics(size);
-					session.SendMessage(Session.TargetBot.Discord, str);
+					await messageParam.Channel.SendMessageAsync(str);
+					await messageParam.DeleteAsync();
+					//session.SendMessage(Session.TargetBot.Discord, str);
 				}
 				if (msg_split[0] == "~이모지초기화")
 				{
