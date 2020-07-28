@@ -632,6 +632,7 @@ namespace IRCRelay
 
 		public void SendMessageAllToTarget(string targetGuild, string message, string targetChannel)
 		{
+			LogManager.WriteLog(targetChannel + "->" + message, "log.txt");
 			foreach (SocketGuild guild in Client.Guilds) // loop through each discord guild
 			{
 				if (guild.Name.ToLower().Contains(targetGuild.ToLower())) // find target 
