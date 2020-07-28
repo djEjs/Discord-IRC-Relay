@@ -233,9 +233,7 @@ namespace IRCRelay
 						size = 50;
 					}
 					var str = EmojiManager.Instance.printStatistics(size);
-					await messageParam.Channel.SendMessageAsync(str);
-					await messageParam.DeleteAsync();
-					//session.SendMessage(Session.TargetBot.Discord, str);
+					session.SendMessage(Session.TargetBot.Discord, str);
 				}
 				if (msg_split[0] == "~이모지초기화")
 				{
@@ -632,7 +630,6 @@ namespace IRCRelay
 
 		public void SendMessageAllToTarget(string targetGuild, string message, string targetChannel)
 		{
-			LogManager.WriteLog(targetChannel + "->" + message, "log.txt");
 			foreach (SocketGuild guild in Client.Guilds) // loop through each discord guild
 			{
 				if (guild.Name.ToLower().Contains(targetGuild.ToLower())) // find target 
