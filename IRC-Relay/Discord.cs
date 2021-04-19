@@ -294,7 +294,7 @@ namespace IRCRelay
 				{
 					if (msg_split.Length == 2)
 					{
-						List<string> list = LearnDBManager.Instance.getString(msg_split[1]);
+						List<string> list = LearnDBManager.Instance.searchString(msg_split[1]);
 						if(list.Count > 0)
 						{
 							string str = "";
