@@ -124,9 +124,9 @@ namespace IRCRelay.LearnDB
 
 		public List<string> searchString(String key)
 		{
+			List<string> list = new List<string>();
 			foreach (KeyValuePair<string, string> item in learndbMap)
 			{
-				List<string> list = new List<string>();
 				Regex regex = new Regex(key);
 				if (regex.IsMatch(item.Key))
 				{
