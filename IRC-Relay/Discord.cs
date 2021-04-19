@@ -290,6 +290,43 @@ namespace IRCRelay
 					}
 				}
 
+				if (msg_split[0] == "~찾아")
+				{
+					if (msg_split.Length == 2)
+					{
+						List<string> list = LearnDBManager.Instance.getString(msg_split[1]);
+						if(list.Count > 0)
+						{
+							string str = "";
+							int max = 10;
+							foreach (String item in list)
+							{
+								str+=item;
+								str+=", ";
+								if(max-- <= 0)
+									break;
+							}
+							session.SendMessage(Session.TargetBot.Discord, str);
+							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, str);
+						}
+						else
+						{
+							string info = "";
+							info += msg_split[1];
+							info += "-> 찾지 못하였습니다.";
+							session.SendMessage(Session.TargetBot.Discord, info);
+							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+						}
+					}
+					else
+					{
+						var info = "~찾아 명령어 사용법 예시: **~찾아 뉴성군**";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+					}
+				}
+
+
 
 				if (msg_split[0] == "~아얄")
 				{
@@ -364,7 +401,7 @@ namespace IRCRelay
 				}
 
 				string[] parts = formatted.Split('\n');
-				if (parts.Length > 3) // don't spam IRC, please.
+				if (parts.Length > 6) // don't spam IRC, please.
 				{
 					await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": Too many lines! If you're meaning to post" +
 						" code blocks, please use \\`\\`\\` to open & close the codeblock." +

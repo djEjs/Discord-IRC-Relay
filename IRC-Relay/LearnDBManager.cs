@@ -19,6 +19,7 @@ using System;
 using System.IO;
 using System.Globalization;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 using IRCRelay.Logs;
 using JsonConfig;
@@ -119,6 +120,20 @@ namespace IRCRelay.LearnDB
 			{
 				return null;
 			}
+		}
+
+		public List<string> searchString(String key)
+		{
+			foreach (KeyValuePair<string, string> item in learndbMap)
+			{
+				List<string> list = new List<string>();
+				Regex regex = new Regex(key);
+				if (regex.IsMatch(item.Key))
+				{
+					list.Add(item.Key);
+				} 
+			}
+			return list;
 		}
 	}
 }
