@@ -60,7 +60,7 @@ namespace IRCRelay
 
 			var socketConfig = new DiscordSocketConfig
 			{
-				WebSocketProvider = WS4NetProvider.Instance,
+				//WebSocketProvider = WS4NetProvider.Instance,
 				LogLevel = LogSeverity.Critical
 			};
 
