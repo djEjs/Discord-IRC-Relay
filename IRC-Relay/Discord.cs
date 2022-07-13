@@ -75,7 +75,7 @@ namespace IRCRelay
 			client.Connected += OnDiscordConnected;
 			client.Disconnected += OnDiscordDisconnect;
 			client.MessageUpdated += OnDiscordMsgUpdate;
-			client.ReactionAdded += OnDiscordReactionAdded;
+			//client.ReactionAdded += OnDiscordReactionAdded;
 
 			random = new Random();
 		}
