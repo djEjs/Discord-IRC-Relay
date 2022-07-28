@@ -292,19 +292,43 @@ namespace IRCRelay
 
 				if (msg_split[0] == "~찾아")
 				{
-					if (msg_split.Length == 2)
+					if (msg_split.Length == 2 || msg_split.Length == 3)
 					{
 						List<string> list = LearnDBManager.Instance.searchString(msg_split[1]);
-						if(list.Count > 0)
+						int check_num = 1;
+						if(msg_split.Length == 3)
+						{
+							check_num = Int32.Parse(msg_split[2]);
+							if (check_num <= 0)
+								check_num = 1;
+						}
+						int skip = (check_num-1)*10;
+						if (list.Count > 0 && list.Count > skip)
 						{
 							string str = "";
 							int max = 10;
+							int item_size = list.Count;
 							foreach (String item in list)
 							{
-								str+=item;
-								str+=", ";
-								if(max-- <= 0)
-									break;
+								int current = 11 - max;
+								if (skip == 0)
+								{
+									str += item;
+									if (max-- <= 0)
+									{
+										check_num++;
+										str += "(외 " + "건. 다음찾기: **~찾아 " + msg_split[1] + " " + check_num + "**)";
+										break;
+									}
+									else if (current != item_size)
+									{
+										str += ", ";
+									}
+								}
+								else
+								{
+									skip--;
+								}
 							}
 							session.SendMessage(Session.TargetBot.Discord, str);
 							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, str);
