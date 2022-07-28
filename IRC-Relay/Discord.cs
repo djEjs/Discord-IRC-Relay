@@ -263,6 +263,40 @@ namespace IRCRelay
 						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 					}
 				}
+
+				if (msg_split[0] == "~추가")
+				{
+					if (msg_split.Length > 2)
+					{
+						string value = LearnDBManager.Instance.getString(msg_split[1]);
+
+						if (value == null)
+						{
+							var saveString = "\"" + msg_split[1] + "\" 존재하지 않는 단어입니다.";
+							session.SendMessage(Session.TargetBot.Discord, saveString);
+							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
+						}
+						else
+						{
+							var str = value + ", ";
+							for (int i = 2; i < msg_split.Length; i++)
+								str += msg_split[i] + ' ';
+
+							LearnDBManager.Instance.SaveString(msg_split[1], str);
+							var saveString = "\"" + msg_split[1] + "\"에 덧붙여서 추가했습니다.";
+							session.SendMessage(Session.TargetBot.Discord, saveString);
+							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
+
+						}
+					}
+					else
+					{
+						var info = "~추가 명령어 사용법 예시: **~추가 기억단어 추가할말**";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+					}
+				}
+
 				if (msg_split[0] == "~알려")
 				{
 					if (msg_split.Length == 2)
@@ -310,14 +344,14 @@ namespace IRCRelay
 							int item_size = list.Count;
 							foreach (String item in list)
 							{
-								int current = 11 - max;
+								int current = 10 * check_num + 11 - max;
 								if (skip == 0)
 								{
 									str += item;
 									if (--max <= 0)
 									{
 										check_num++;
-										str += " (외 " + (list.Count - 10 * check_num) + "건. 다음찾기: **~찾아 " + msg_split[1] + " " + check_num + "**)";
+										str += " (외 " + (list.Count - 10 * (check_num-1)) + "건. 다음찾기: **~찾아 " + msg_split[1] + " " + check_num + "**)";
 										break;
 									}
 									else if (current != item_size)
