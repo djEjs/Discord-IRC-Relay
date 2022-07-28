@@ -314,10 +314,10 @@ namespace IRCRelay
 								if (skip == 0)
 								{
 									str += item;
-									if (max-- <= 0)
+									if (--max <= 0)
 									{
 										check_num++;
-										str += "(외 " + "건. 다음찾기: **~찾아 " + msg_split[1] + " " + check_num + "**)";
+										str += " (외 " + (list.Count - 10 * check_num) + "건. 다음찾기: **~찾아 " + msg_split[1] + " " + check_num + "**)";
 										break;
 									}
 									else if (current != item_size)
