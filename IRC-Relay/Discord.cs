@@ -249,7 +249,7 @@ namespace IRCRelay
 					{
 						var str = "";
 						for (int i = 2; i < msg_split.Length; i++)
-							str += msg_split[i] + ' ';
+							str += (msg_split.Length == i + 1) ? msg_split[i] : msg_split[i] + ' ';
 
 						LearnDBManager.Instance.SaveString(msg_split[1], str);
 						var saveString = "\"" + msg_split[1] + "\" 저장했습니다.";
@@ -280,7 +280,7 @@ namespace IRCRelay
 						{
 							var str = value + ", ";
 							for (int i = 2; i < msg_split.Length; i++)
-								str += msg_split[i] + ' ';
+								str += (msg_split.Length == i+1)? msg_split[i] : msg_split[i] + ' ';
 
 							LearnDBManager.Instance.SaveString(msg_split[1], str);
 							var saveString = "\"" + msg_split[1] + "\"에 덧붙여서 추가했습니다.";
