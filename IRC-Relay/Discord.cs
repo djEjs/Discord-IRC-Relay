@@ -39,6 +39,7 @@ using Meebey.SmartIrc4net;
 
 using System.Web;
 using System.IO;
+using Nito.AsyncEx;
 
 namespace IRCRelay
 {
@@ -123,32 +124,49 @@ namespace IRCRelay
 
 		static public string TestWebp(String webp)
 		{
-			Console.WriteLine("TestWebp {0}", webp);
 			Uri uri = new Uri(webp);
 			string file = Path.GetFileName(uri.AbsolutePath);
-			Console.WriteLine("File {0}", file);
 			using (var client = new WebClient())
 			{
 				client.DownloadFile(webp, "C:\\AutoSet10\\public_html\\img\\" + file);
 			}
 
+			string new_path = "C:\\AutoSet10\\public_html\\img\\" + file.Replace(".webp", ".gif");
 			using (var animatedWebP = new ImageMagick.MagickImageCollection("C:\\AutoSet10\\public_html\\img\\" + file))
 			{
-				animatedWebP.Write("C:\\AutoSet10\\public_html\\img\\" + file + ".gif", ImageMagick.MagickFormat.Gif);
+				animatedWebP.Write(new_path, ImageMagick.MagickFormat.Gif);
 			}
 
-			return "http://joy1999.codns.com:8999/img/" + file + ".gif";
+			return new_path;
 		}
 
+		static public string TestWebm(String webm)
+		{
+			Uri uri = new Uri(webm);
+			string file = Path.GetFileName(uri.AbsolutePath);
+			using (var client = new WebClient())
+			{
+				client.DownloadFile(webm, "C:\\AutoSet10\\public_html\\img\\" + file);
+			}
+			string new_path = "C:\\AutoSet10\\public_html\\img\\" + file.Replace(".webm", ".mp4");
+			AsyncContext.Run(async () => await Xabe.FFmpeg.FFmpeg.Conversions.FromSnippet.ToMp4("C:\\AutoSet10\\public_html\\img\\" + file, new_path)).Start();
+
+			return new_path;
+		}
 
 
 		public async Task OnDiscordMessage(SocketMessage messageParam)
 		{
 			string username = "";
 			string formatted = "";
+
 			try
 			{
-				if (!(messageParam is SocketUserMessage message)) return;
+				if (!(messageParam is SocketUserMessage message))
+				{
+					LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "The class type is " + messageParam.GetType(), "log.txt");
+					return;
+				}
 
 				if (message.Author.Id == client.CurrentUser.Id) return; // block self
 
@@ -182,7 +200,14 @@ namespace IRCRelay
 
 				if(msg_split[0].EndsWith(".webp"))
 				{
-					session.SendMessage(Session.TargetBot.Discord, TestWebp(msg_split[0]));
+					session.SendMessage(Session.TargetBot.Discord, "webp 변환중...");
+					session.SendFile(Session.TargetBot.Discord, TestWebp(msg_split[0]));
+				}
+
+				if (msg_split[0].EndsWith(".webm"))
+				{
+					session.SendMessage(Session.TargetBot.Discord, "webm 변환중...");
+					session.SendFile(Session.TargetBot.Discord, TestWebm(msg_split[0]));
 				}
 
 				if (msg_split[0] == "~아피")
@@ -765,6 +790,24 @@ namespace IRCRelay
 				}
 			}
 		}
+
+
+		public void SendFileAllToTarget(string targetGuild, string filepath, string targetChannel)
+		{
+			foreach (SocketGuild guild in Client.Guilds) // loop through each discord guild
+			{
+				if (guild.Name.ToLower().Contains(targetGuild.ToLower())) // find target 
+				{
+					SocketTextChannel channel = FindChannel(guild, targetChannel); // find desired channel
+
+					if (channel != null) // target exists
+					{
+						channel.SendFileAsync(filepath,"");
+					}
+				}
+			}
+		}
+
 
 		public static SocketTextChannel FindChannel(SocketGuild guild, string text)
 		{

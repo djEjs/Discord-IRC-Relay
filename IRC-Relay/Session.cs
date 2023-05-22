@@ -97,5 +97,18 @@ namespace IRCRelay
 					break;
 			}
 		}
+		public void SendFile(TargetBot dest, string filepath, string username = "")
+		{
+			switch (dest)
+			{
+				case TargetBot.Discord:
+					discord.SendFileAllToTarget(config.DiscordGuildName, filepath, config.DiscordChannelName);
+					break;
+				case TargetBot.IRC:
+					break;
+			}
+		}
+
+		
 	}
 }
