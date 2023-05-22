@@ -163,10 +163,7 @@ namespace IRCRelay
 			try
 			{
 				if (!(messageParam is SocketUserMessage message))
-				{
-					LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "The class type is " + messageParam.GetType(), "log.txt");
 					return;
-				}
 
 				if (message.Author.Id == client.CurrentUser.Id) return; // block self
 
@@ -190,6 +187,14 @@ namespace IRCRelay
 
 				/* Santize discord-specific notation to human readable things */
 				username = (messageParam.Author as SocketGuildUser)?.Nickname ?? message.Author.Username;
+				foreach (var attach in message.Attachments)
+				{
+					LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "Filename is " + attach.Filename, "log.txt");
+					if (attach.Filename.EndsWith(".webp"))
+					{
+						session.SendMessage(Session.TargetBot.Discord, "webp 변환필요:" + attach.Filename + " -> " + attach.Url);
+					}
+				}
 				formatted = await DoURLMessage(messageParam.Content, message);
 				formatted = MentionToNickname(formatted, message);
 				formatted = EmojiToName(formatted, message);
@@ -202,12 +207,6 @@ namespace IRCRelay
 				{
 					session.SendMessage(Session.TargetBot.Discord, "webp 변환중...");
 					session.SendFile(Session.TargetBot.Discord, TestWebp(msg_split[0]));
-				}
-
-				if (msg_split[0].EndsWith(".webm"))
-				{
-					session.SendMessage(Session.TargetBot.Discord, "webm 변환중...");
-					session.SendFile(Session.TargetBot.Discord, TestWebm(msg_split[0]));
 				}
 
 				if (msg_split[0] == "~아피")
