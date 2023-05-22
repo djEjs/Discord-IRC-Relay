@@ -38,6 +38,7 @@ using System.Collections;
 using Meebey.SmartIrc4net;
 
 using System.Web;
+using System.IO;
 
 namespace IRCRelay
 {
@@ -120,6 +121,27 @@ namespace IRCRelay
 			catch { }
 		}
 
+		static public string TestWebp(String webp)
+		{
+			Console.WriteLine("TestWebp {0}", webp);
+			Uri uri = new Uri(webp);
+			string file = Path.GetFileName(uri.AbsolutePath);
+			Console.WriteLine("File {0}", file);
+			using (var client = new WebClient())
+			{
+				client.DownloadFile(webp, "C:\\AutoSet10\\public_html\\img\\" + file);
+			}
+
+			using (var animatedWebP = new ImageMagick.MagickImageCollection("C:\\AutoSet10\\public_html\\img\\" + file))
+			{
+				animatedWebP.Write("C:\\AutoSet10\\public_html\\img\\" + file + ".gif", ImageMagick.MagickFormat.Gif);
+			}
+
+			return "http://joy1999.codns.com:8999/img/" + file + ".gif";
+		}
+
+
+
 		public async Task OnDiscordMessage(SocketMessage messageParam)
 		{
 			string username = "";
@@ -157,6 +179,11 @@ namespace IRCRelay
 				formatted = Unescape(formatted);
 
 				string[] msg_split = formatted.Split(' ');
+
+				if(msg_split[0].EndsWith(".webp"))
+				{
+					session.SendMessage(Session.TargetBot.Discord, TestWebp(msg_split[0]));
+				}
 
 				if (msg_split[0] == "~아피")
 				{
