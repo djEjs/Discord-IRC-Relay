@@ -189,10 +189,10 @@ namespace IRCRelay
 				username = (messageParam.Author as SocketGuildUser)?.Nickname ?? message.Author.Username;
 				foreach (var attach in message.Attachments)
 				{
-					LogManager.WriteLog(MsgSendType.DiscordToIRC, username, "Filename is " + attach.Filename, "log.txt");
 					if (attach.Filename.EndsWith(".webp"))
 					{
-						session.SendMessage(Session.TargetBot.Discord, "webp 변환필요:" + attach.Filename + " -> " + attach.Url);
+						session.SendMessage(Session.TargetBot.Discord, "webp 변환중...");
+						session.SendFile(Session.TargetBot.Discord, TestWebp(attach.Url));
 					}
 				}
 				formatted = await DoURLMessage(messageParam.Content, message);
