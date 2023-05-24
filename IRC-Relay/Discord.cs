@@ -252,6 +252,7 @@ namespace IRCRelay
 								if (path != null)
 								{
 									session.SendFile(Session.TargetBot.Discord, path);
+									hasUploadFile = true;
 								}
 							}
 						}
