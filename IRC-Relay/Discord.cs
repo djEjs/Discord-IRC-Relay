@@ -136,13 +136,11 @@ namespace IRCRelay
 			{
 				if (animatedWebP.Count <= 1)
 				{
-					session.SendMessage(Session.TargetBot.Discord, "webp 변환할필요없음");
 					return null;
 				}
 				else
 				{
-
-					session.SendMessage(Session.TargetBot.Discord, "webp 변환중... 길이("+ animatedWebP.Count+")");
+					session.SendMessage(Session.TargetBot.Discord, "webp 변환중...");
 				}
 				animatedWebP.Write(new_path, ImageMagick.MagickFormat.Gif);
 			}
