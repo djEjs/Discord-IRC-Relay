@@ -122,7 +122,7 @@ namespace IRCRelay
 			catch { }
 		}
 
-		static public string TestWebp(String webp)
+		public string TestWebp(String webp)
 		{
 			Uri uri = new Uri(webp);
 			string file = Path.GetFileName(uri.AbsolutePath);
@@ -134,6 +134,16 @@ namespace IRCRelay
 			string new_path = "C:\\AutoSet10\\public_html\\img\\" + file.Replace(".webp", ".gif");
 			using (var animatedWebP = new ImageMagick.MagickImageCollection("C:\\AutoSet10\\public_html\\img\\" + file))
 			{
+				if (animatedWebP.Count <= 1)
+				{
+					session.SendMessage(Session.TargetBot.Discord, "webp 변환할필요없음");
+					return null;
+				}
+				else
+				{
+
+					session.SendMessage(Session.TargetBot.Discord, "webp 변환중... 길이("+ animatedWebP.Count+")");
+				}
 				animatedWebP.Write(new_path, ImageMagick.MagickFormat.Gif);
 			}
 
@@ -191,8 +201,11 @@ namespace IRCRelay
 				{
 					if (attach.Filename.EndsWith(".webp"))
 					{
-						session.SendMessage(Session.TargetBot.Discord, "webp 변환중...");
-						session.SendFile(Session.TargetBot.Discord, TestWebp(attach.Url));
+						String path = TestWebp(attach.Url);
+						if(path != null)
+						{
+							session.SendFile(Session.TargetBot.Discord, path);
+						}
 					}
 				}
 				formatted = await DoURLMessage(messageParam.Content, message);
