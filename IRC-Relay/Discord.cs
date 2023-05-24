@@ -134,7 +134,7 @@ namespace IRCRelay
 					client.DownloadFile(fileurl, "C:\\AutoSet10\\public_html\\img\\" + file);
 				}
 
-				string new_path = "C:\\AutoSet10\\public_html\\img\\" + file.Replace("." + extension, ".gif");
+				string new_path = "C:\\AutoSet10\\public_html\\img\\" + file.Replace(extension, ".gif");
 				using (var animatedWebP = new ImageMagick.MagickImageCollection("C:\\AutoSet10\\public_html\\img\\" + file))
 				{
 					if (animatedWebP.Count <= 1)
@@ -257,12 +257,11 @@ namespace IRCRelay
 						}
 						if(!hasUploadFile)
 						{
-							var info = "~gif \"gif변환파일주소\" 혹은 업로드시 ~gif 붙이고 업로드";
+							var info = "사용법: ~gif \"gif변환파일주소\" 혹은 업로드시 ~gif 붙이고 업로드";
 							session.SendMessage(Session.TargetBot.Discord, info);
 							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 						}
 					}
-					session.SendFile(Session.TargetBot.Discord, toGif(msg_split[0]));
 				}
 
 
