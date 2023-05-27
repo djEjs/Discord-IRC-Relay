@@ -211,6 +211,8 @@ namespace IRCRelay
 						if(path != null)
 						{
 							session.SendFile(Session.TargetBot.Discord, path);
+							await messageParam.DeleteAsync();
+							return;
 						}
 					}
 				}
@@ -228,6 +230,8 @@ namespace IRCRelay
 					if (path != null)
 					{
 						session.SendFile(Session.TargetBot.Discord, path);
+						await messageParam.DeleteAsync();
+						return;
 					}
 				}
 
@@ -239,6 +243,8 @@ namespace IRCRelay
 						if (path != null)
 						{
 							session.SendFile(Session.TargetBot.Discord, path);
+							await messageParam.DeleteAsync();
+							return;
 						}
 					}
 					else
@@ -261,6 +267,11 @@ namespace IRCRelay
 							var info = "사용법: ~gif \"gif변환파일주소\" 혹은 업로드시 ~gif 붙이고 업로드";
 							session.SendMessage(Session.TargetBot.Discord, info);
 							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+						}
+						else
+						{
+							await messageParam.DeleteAsync();
+							return;
 						}
 					}
 				}
