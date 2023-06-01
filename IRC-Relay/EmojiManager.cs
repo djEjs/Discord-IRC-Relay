@@ -178,9 +178,9 @@ namespace IRCRelay.Emoji
 			{
 				if(emoji.Value < 0) {
 					continue;
-				}				returnString += "**# ";
+				}				returnString += "**$ ";
 				returnString += i.ToString("D2");
-				returnString += " #** ";
+				returnString += " $** ";
 				returnString += emoji.Key;
 				returnString += " **[";
 				returnString += emoji.Value.ToString("D3");
