@@ -25,6 +25,7 @@ using Discord.Commands;
 using Discord.Net.Providers.WS4Net;
 using Discord.WebSocket;
 
+using IRCRelay.Call;
 using IRCRelay.Logs;
 using IRCRelay.Emoji;
 using IRCRelay.LearnDB;
@@ -122,7 +123,7 @@ namespace IRCRelay
 			catch { }
 		}
 
-		public string toGif(String fileurl)
+		public string toGif(String user, String fileurl)
 		{
 			try
 			{
@@ -143,7 +144,7 @@ namespace IRCRelay
 					}
 					else
 					{
-						session.SendMessage(Session.TargetBot.Discord, extension + " 변환중...");
+						session.SendMessage(Session.TargetBot.Discord, extension + " 변환중... (요청자:"+ user  + ", 예상 경로 : http://joy1999.codns.com:8999/img/" + file.Replace(extension, ".gif") + ")");
 					}
 					animatedWebP.Write(new_path, ImageMagick.MagickFormat.Gif);
 				}
@@ -168,6 +169,14 @@ namespace IRCRelay
 			AsyncContext.Run(async () => await Xabe.FFmpeg.FFmpeg.Conversions.FromSnippet.ToMp4("C:\\AutoSet10\\public_html\\img\\" + file, new_path)).Start();
 
 			return new_path;
+		}
+
+
+		public void CallMessage(String users)
+		{
+			var info = "상영회 시간입니다. : " + users;
+			session.SendMessage(Session.TargetBot.Discord, info);
+			session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 		}
 
 
@@ -207,7 +216,7 @@ namespace IRCRelay
 				{
 					if (attach.Filename.EndsWith(".webp"))
 					{
-						String path = toGif(attach.Url);
+						String path = toGif(username, attach.Url);
 						if(path != null)
 						{
 							session.SendFile(Session.TargetBot.Discord, path);
@@ -226,7 +235,7 @@ namespace IRCRelay
 
 				if(msg_split[0].EndsWith(".webp"))
 				{
-					String path = toGif(msg_split[0]);
+					String path = toGif(username, msg_split[0]);
 					if (path != null)
 					{
 						session.SendFile(Session.TargetBot.Discord, path);
@@ -239,7 +248,7 @@ namespace IRCRelay
 				{
 					if (msg_split.Length > 1)
 					{
-						String path = toGif(msg_split[1]);
+						String path = toGif(username, msg_split[1]);
 						if (path != null)
 						{
 							session.SendFile(Session.TargetBot.Discord, path);
@@ -254,7 +263,7 @@ namespace IRCRelay
 						{
 							if (!attach.Filename.EndsWith(".webp"))
 							{
-								String path = toGif(attach.Url);
+								String path = toGif(username, attach.Url);
 								if (path != null)
 								{
 									session.SendFile(Session.TargetBot.Discord, path);
@@ -391,7 +400,12 @@ namespace IRCRelay
 
 						if (value == null)
 						{
-							var saveString = "\"" + msg_split[1] + "\" 존재하지 않는 단어입니다.";
+							var str = "";
+							for (int i = 2; i < msg_split.Length; i++)
+								str += (msg_split.Length == i + 1) ? msg_split[i] : msg_split[i] + ' ';
+
+							LearnDBManager.Instance.SaveString(msg_split[1], str);
+							var saveString = "\"" + msg_split[1] + "\" 존재하지 않는 단어이므로 새로 저장했습니다.";
 							session.SendMessage(Session.TargetBot.Discord, saveString);
 							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
 						}
@@ -539,6 +553,74 @@ namespace IRCRelay
 					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, "<@" + username + ">");
 					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, formatted.Replace("$", ""));
 					return;
+				}
+
+				if (msg_split[0] == "~상영회")
+				{
+					if (msg_split.Length == 3)
+					{
+						CallManager.Instance.AddDate(msg_split[1], msg_split[2]);
+						string info = "상영회 예정 날짜 [";
+						info += Convert.ToDateTime(msg_split[1]).ToString();
+						info += "] -> [";
+						info += Convert.ToDateTime(msg_split[2]).ToString();
+						info += "]";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+					}
+					else
+					{
+						var info = "~상영회 (시작날짜) (종료날짜) 사용법 예시: **~상영회 9/9 9/13**,  ~상영회참가, ~상영회탈퇴 로 참석/탈퇴하세요.";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+					}
+				}
+
+
+				if (msg_split[0] == "~상영회참가")
+				{
+					CallManager.Instance.AddMember(username);
+					string info = "상영회 [";
+					info += username;
+					info += "] 참가되었습니다";
+					session.SendMessage(Session.TargetBot.Discord, info);
+					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+				}
+				if (msg_split[0] == "~상영회탈퇴" || msg_split[0] == "~상영회불참")
+				{
+					CallManager.Instance.RemoveMember(username);
+					string info = "상영회 [";
+					info += username;
+					info += "] 탈퇴되었습니다";
+					session.SendMessage(Session.TargetBot.Discord, info);
+					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+				}
+
+				if (msg_split[0] == "~상영회종료")
+				{
+					CallManager.Instance.AddDate(Convert.ToDateTime(new DateTime()).ToString(), Convert.ToDateTime(new DateTime()).ToString());
+					string info = "상영회가 종료되었습니다";
+					session.SendMessage(Session.TargetBot.Discord, info);
+					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+				}
+
+				if (msg_split[0] == "~상영회예외")
+				{
+					if (msg_split.Length == 3)
+					{
+						CallManager.Instance.AddExclude(msg_split[1]);
+						string info = "다음 날짜엔 상영회가 없습니다. [";
+						info += Convert.ToDateTime(msg_split[1]).ToString();
+						info += "]";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+					}
+					else
+					{
+						var info = "~상영회예외 (해당날짜) 사용법 예시: **~상영회 9/10** 9월 10일은 제외함";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+					}
 				}
 
 				if (msg_split[0] == "~골라")

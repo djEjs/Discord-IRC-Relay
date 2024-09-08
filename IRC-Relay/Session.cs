@@ -15,9 +15,11 @@
  * this program. If not, see http://www.gnu.org/licenses/.
  */
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
+using IRCRelay.Call;
 
 namespace IRCRelay
 {
@@ -34,6 +36,7 @@ namespace IRCRelay
 		private IRC irc;
 		private dynamic config;
 		private bool alive;
+		private static Timer timer;
 
 		public bool IsAlive { get => alive; }
 		public IRC Irc { get => irc; }
@@ -43,7 +46,17 @@ namespace IRCRelay
 		{
 			this.config = config;
 			alive = true;
+			timer = new Timer(TimerCallback, null, 0, 60000);
 		}
+
+		private void TimerCallback(object state)
+		{
+			if(CallManager.Instance.checkAble())
+			{
+				Discord.CallMessage(CallManager.Instance.GetCalls());
+			}
+		}
+
 
 		public async Task Kill(TargetBot bot)
 		{
