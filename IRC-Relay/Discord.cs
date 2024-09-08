@@ -25,7 +25,6 @@ using Discord.Commands;
 using Discord.Net.Providers.WS4Net;
 using Discord.WebSocket;
 
-using IRCRelay.Call;
 using IRCRelay.Logs;
 using IRCRelay.Emoji;
 using IRCRelay.LearnDB;

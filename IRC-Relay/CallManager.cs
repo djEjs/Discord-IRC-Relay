@@ -27,7 +27,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
 
-namespace IRCRelay.Call
+namespace IRCRelay
 {
 	public class CallManager
 	{
