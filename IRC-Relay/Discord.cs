@@ -211,6 +211,7 @@ namespace IRCRelay
 
 				/* Santize discord-specific notation to human readable things */
 				username = (messageParam.Author as SocketGuildUser)?.Nickname ?? message.Author.Username;
+				var userid = (messageParam.Author as SocketGuildUser)?.Nickname ?? message.Author.Id.ToString();
 				foreach (var attach in message.Attachments)
 				{
 					if (attach.Filename.EndsWith(".webp"))
@@ -559,17 +560,21 @@ namespace IRCRelay
 					if (msg_split.Length == 3)
 					{
 						CallManager.Instance.AddDate(msg_split[1], msg_split[2]);
+						DateTime startDate = Convert.ToDateTime(msg_split[1]);
+						DateTime endDate = Convert.ToDateTime(msg_split[2]);
+						startDate = new DateTime(startDate.Year, startDate.Month, startDate.Day, 0, 1, 0);
+						endDate = new DateTime(endDate.Year, endDate.Month, endDate.Day, 23, 59, 0);
 						string info = "상영회 예정 날짜 [";
-						info += Convert.ToDateTime(msg_split[1]).ToString();
+						info += startDate.ToString();
 						info += "] -> [";
-						info += Convert.ToDateTime(msg_split[2]).ToString();
-						info += "]";
+						info += endDate.ToString();
+						info += "] ~상영회참가, ~상영회탈퇴 로 참여하세요.";
 						session.SendMessage(Session.TargetBot.Discord, info);
 						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 					}
 					else
 					{
-						var info = "~상영회 (시작날짜) (종료날짜) 사용법 예시: **~상영회 9/9 9/13**,  ~상영회참가, ~상영회탈퇴 로 참석/탈퇴하세요.";
+						var info = "~상영회 (시작날짜) (종료날짜) 사용법 예시: **~상영회 9/9 9/13**";
 						session.SendMessage(Session.TargetBot.Discord, info);
 						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 					}
@@ -578,7 +583,7 @@ namespace IRCRelay
 
 				if (msg_split[0] == "~상영회참가")
 				{
-					CallManager.Instance.AddMember(username);
+					CallManager.Instance.AddMember(username, userid);
 					string info = "상영회 [";
 					info += username;
 					info += "] 참가되었습니다";

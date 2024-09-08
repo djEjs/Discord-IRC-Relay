@@ -26,6 +26,7 @@ using JsonConfig;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
+using Discord;
 
 namespace IRCRelay
 {
@@ -44,7 +45,7 @@ namespace IRCRelay
 		private DateTime startDate = new DateTime();
 		private DateTime endDate = new DateTime();
 		private DateTime lastDate = new DateTime();
-		private HashSet<string> callset = new HashSet<string>();
+		private Dictionary<string, string> callset = new Dictionary<string, string>();
 		private HashSet<DateTime> excludedate = new HashSet<DateTime>();
 		private dynamic mainConfig;
 		private const string file = "call.json";
@@ -65,7 +66,7 @@ namespace IRCRelay
 				{
 					foreach (JObject jobj in readJson["call"])
 					{
-						callset.Add(jobj["key"].ToString());
+						callset.Add(jobj["key"].ToString(), jobj["value"].ToString());
 					}
 				}
 				if (readJson["exclude"] != null)
@@ -93,8 +94,8 @@ namespace IRCRelay
 			foreach (var callString in callset)
 			{
 				var jsonChild = new JObject();
-				jsonChild.Add("key", callString);
-				jsonChild.Add("value", "");
+				jsonChild.Add("key", callString.Key);
+				jsonChild.Add("value", callString.Value);
 				jarray.Add(jsonChild);
 			}
 			json.Add("call", jarray);
@@ -125,11 +126,11 @@ namespace IRCRelay
 			this.mainConfig = config;
 		}
 
-		public void AddMember(String key)
+		public void AddMember(String key, String val)
 		{
 			if (mainConfig.IRCLogMessages)
-				LogManager.WriteLog("[CallManager] add member" + key , "log.txt");
-			callset.Add(key);
+				LogManager.WriteLog("[CallManager] add member" + key + ", " + val, "log.txt");
+			callset.Add(key, val);
 			saveConfig();
 		}
 
@@ -147,7 +148,7 @@ namespace IRCRelay
 			startDate = Convert.ToDateTime(startdata);
 			endDate = Convert.ToDateTime(enddate);
 			lastDate = new DateTime();
-			callset = new HashSet<string>();
+			callset = new Dictionary<string, string>();
 			excludedate = new HashSet<DateTime>();
 
 			if (mainConfig.IRCLogMessages)
@@ -164,14 +165,15 @@ namespace IRCRelay
 			excludedate.Add(excludedate_);
 			saveConfig();
 		}
-
+		internal static string MentionUser(string id) => $"<@{id}>";
 		public string GetCalls()
 		{
 			string results = "";
 
 			foreach (var call in callset)
 			{
-				results += "@" + call + ", ";
+				results += MentionUser(call.Value);
+				results += ",";
 			}
 			return results;
 		}
@@ -181,7 +183,11 @@ namespace IRCRelay
 
 			if (lastDate.Date != currentDate.Date)
 			{
-				if(currentDate.Hour==1 && currentDate.Minute < 5)
+				// 평일(월~금)인지 확인
+				if ((currentDate.Hour == 1 && currentDate.Minute < 20) ||
+					(currentDate.DayOfWeek >= DayOfWeek.Monday && currentDate.DayOfWeek <= DayOfWeek.Friday && currentDate.Hour == 22 && currentDate.Minute < 5) ||
+					// 주말(토~일)인지 확인
+					((currentDate.DayOfWeek == DayOfWeek.Saturday || currentDate.DayOfWeek == DayOfWeek.Sunday) && currentDate.Hour == 21 && currentDate.Minute < 5 ))
 				{
 					if (currentDate <= endDate && currentDate >= startDate)
 					{
