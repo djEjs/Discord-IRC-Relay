@@ -60,6 +60,15 @@ namespace IRCRelay
 				if (config.IRCLogMessages)
 					LogManager.WriteLog("[Exception caught]" + e.ToString(), "log.txt");
 			}
+			try
+			{
+				CallManager.Instance.setConfig(config);
+			}
+			catch (Exception e)
+			{
+				if (config.IRCLogMessages)
+					LogManager.WriteLog("[Exception caught]" + e.ToString(), "log.txt");
+			}
 			StartSessions(config).GetAwaiter().GetResult();
 		}
 

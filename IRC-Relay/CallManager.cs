@@ -85,6 +85,10 @@ namespace IRCRelay
 				}
 			}
 		}
+		public void setConfig(dynamic config)
+		{
+			this.mainConfig = config;
+		}
 
 		private void saveConfig()
 		{
