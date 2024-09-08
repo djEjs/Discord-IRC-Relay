@@ -555,6 +555,26 @@ namespace IRCRelay
 					return;
 				}
 
+				if (msg_split[0] == "~상영회연장")
+				{
+					if (msg_split.Length == 3)
+					{
+						CallManager.Instance.PlusDate(msg_split[1]);
+						DateTime endDate = Convert.ToDateTime(msg_split[1]);
+						endDate = new DateTime(endDate.Year, endDate.Month, endDate.Day, 23, 59, 0);
+						string info = "상영회 연장 날짜 [";
+						info += endDate.ToString();
+						info += "] ~상영회참가, ~상영회탈퇴 로 참여하세요.";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+					}
+					else
+					{
+						var info = "~상영회연장 (종료날짜) 사용법 예시: **~상영회 9/15**";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+					}
+				}
 				if (msg_split[0] == "~상영회")
 				{
 					if (msg_split.Length == 3)

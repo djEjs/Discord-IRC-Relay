@@ -156,6 +156,14 @@ namespace IRCRelay
 			saveConfig();
 		}
 
+		public void PlusDate(String enddate)
+		{
+			endDate = Convert.ToDateTime(enddate);
+
+			if (mainConfig.IRCLogMessages)
+				LogManager.WriteLog("[CallManager] plus date[" + startDate.ToString() + ", " + endDate.ToString() + "]", "log.txt");
+			saveConfig();
+		}
 		public void AddExclude(String data)
 		{
 			DateTime excludedate_ = Convert.ToDateTime(data);
@@ -184,8 +192,7 @@ namespace IRCRelay
 			if (lastDate.Date != currentDate.Date)
 			{
 				// 평일(월~금)인지 확인
-				if ((currentDate.Hour == 1 && currentDate.Minute < 20) ||
-					(currentDate.DayOfWeek >= DayOfWeek.Monday && currentDate.DayOfWeek <= DayOfWeek.Friday && currentDate.Hour == 22 && currentDate.Minute < 5) ||
+				if ((currentDate.DayOfWeek >= DayOfWeek.Monday && currentDate.DayOfWeek <= DayOfWeek.Friday && currentDate.Hour == 22 && currentDate.Minute < 5) ||
 					// 주말(토~일)인지 확인
 					((currentDate.DayOfWeek == DayOfWeek.Saturday || currentDate.DayOfWeek == DayOfWeek.Sunday) && currentDate.Hour == 21 && currentDate.Minute < 5 ))
 				{
