@@ -300,8 +300,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Discord.cs" />
-    <Compile Include="CallManager.cs" />
     <Compile Include="EmojiManager.cs" />
+    <Compile Include="CallManager.cs" />
     <Compile Include="LearnDBManager.cs" />
     <Compile Include="IRC.cs" />
     <Compile Include="LogManager.cs" />

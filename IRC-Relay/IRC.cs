@@ -198,7 +198,7 @@ namespace IRCRelay
 				if (username.Equals(this.config.IRCNick))
 					return;
 
-				if (e.Data.Type == ReceiveType.Join)
+				if (e.Data.Type == ReceiveType.Join && username != "^^")
 				{
 					session.SendMessage(Session.TargetBot.Discord, username + JoinMsgs[random.Next(JoinMsgsLen)]);
 				}
@@ -219,7 +219,7 @@ namespace IRCRelay
 				if (username.Equals(this.config.IRCNick))
 					return;
 
-				if (e.Data.Type == ReceiveType.Quit)
+				if (e.Data.Type == ReceiveType.Quit && username != "^^")
 				{
 					session.SendMessage(Session.TargetBot.Discord, username + QuitMsgs[random.Next(QuitMsgsLen)]);
 				}
