@@ -232,18 +232,7 @@ namespace IRCRelay
 				formatted = Unescape(formatted);
 
 				string[] msg_split = formatted.Split(' ');
-
-				if(msg_split[0].EndsWith(".webp"))
-				{
-					String path = toGif(username, msg_split[0]);
-					if (path != null)
-					{
-						session.SendFile(Session.TargetBot.Discord, path);
-						await messageParam.DeleteAsync();
-						return;
-					}
-				}
-
+				
 				if (msg_split[0] == "~gif")
 				{
 					if (msg_split.Length > 1)
@@ -557,7 +546,7 @@ namespace IRCRelay
 
 				if (msg_split[0] == "~상영회연장")
 				{
-					if (msg_split.Length == 3)
+					if (msg_split.Length == 2)
 					{
 						CallManager.Instance.PlusDate(msg_split[1]);
 						DateTime endDate = Convert.ToDateTime(msg_split[1]);
