@@ -212,19 +212,6 @@ namespace IRCRelay
 				/* Santize discord-specific notation to human readable things */
 				username = (messageParam.Author as SocketGuildUser)?.Nickname ?? message.Author.Username;
 				var userid = (messageParam.Author as SocketGuildUser)?.Nickname ?? message.Author.Id.ToString();
-				foreach (var attach in message.Attachments)
-				{
-					if (attach.Filename.EndsWith(".webp"))
-					{
-						String path = toGif(username, attach.Url);
-						if(path != null)
-						{
-							session.SendFile(Session.TargetBot.Discord, path);
-							await messageParam.DeleteAsync();
-							return;
-						}
-					}
-				}
 				formatted = await DoURLMessage(messageParam.Content, message);
 				formatted = MentionToNickname(formatted, message);
 				formatted = EmojiToName(formatted, message);
@@ -232,7 +219,6 @@ namespace IRCRelay
 				formatted = Unescape(formatted);
 
 				string[] msg_split = formatted.Split(' ');
-				
 				if (msg_split[0] == "~gif")
 				{
 					if (msg_split.Length > 1)
