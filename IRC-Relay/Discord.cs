@@ -539,9 +539,10 @@ namespace IRCRelay
 					KeyValuePair<string, string>? entry = LearnDBManager.Instance.GetLastAniEntry();
 					if(entry != null)
 					{
-						info = "다음 상영회[";
+						info += "다음 상영회[";
 						info += entry.Value.Key;
 						info += " : ";
+						info += entry.Value.Value;
 						info += "] ";
 						if (msg_split.Length > 2 && msg_split[1] == "추가")
 						{
