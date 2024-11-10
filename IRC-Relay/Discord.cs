@@ -522,24 +522,27 @@ namespace IRCRelay
 
 					DateTime startDate = CallManager.Instance.getStartDate();
 					DateTime endDate = CallManager.Instance.getEndDate();
-
-					if(endDate.Year < 2090)
+					startDate = new DateTime(startDate.Year, startDate.Month, startDate.Day, 0, 1, 0);
+					endDate = new DateTime(endDate.Year, endDate.Month, endDate.Day, 23, 59, 0);
+					if (endDate.Year < 2090)
 					{
 						info += "예정일정[";
-						info += startDate.ToString();
+						info += startDate.ToString("yyyy-MM-dd");
 						info += " -> ";
-						info += endDate.ToString();
+						info += endDate.ToString("yyyy-MM-dd");
 						info += "] ";
 					} else
 					{
 						info += "시작일정[";
-						info += startDate.ToString();
+						info += startDate.ToString("yyyy-MM-dd");
 						info += "] ";
 					}
+					session.SendMessage(Session.TargetBot.Discord, info);
+					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 					KeyValuePair<string, string>? entry = LearnDBManager.Instance.GetLastAniEntry();
 					if(entry != null)
 					{
-						info += "다음 상영회[";
+						info = "다음 상영회[";
 						info += entry.Value.Key;
 						info += " : ";
 						info += entry.Value.Value;
@@ -549,9 +552,9 @@ namespace IRCRelay
 							msg_split[0] = "~추가";
 							msg_split[1] = entry.Value.Key;
 						}
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 					}
-					session.SendMessage(Session.TargetBot.Discord, info);
-					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 				}
 
 
