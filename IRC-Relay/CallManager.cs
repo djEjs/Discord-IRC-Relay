@@ -42,6 +42,7 @@ namespace IRCRelay
 			}
 		}
 
+		private string id;
 		private DateTime startDate = new DateTime();
 		private DateTime endDate = new DateTime();
 		private DateTime lastDate = new DateTime();
@@ -84,6 +85,10 @@ namespace IRCRelay
 				{
 					endDate = Convert.ToDateTime(readJson["enddate"].ToString());
 				}
+				if (readJson["id"] != null)
+				{
+					id = readJson["id"].ToString();
+				}
 			}
 		}
 
@@ -114,6 +119,7 @@ namespace IRCRelay
 
 			json.Add("startDate", startDate.ToString());
 			json.Add("enddate", endDate.ToString());
+			json.Add("id", id);
 
 			using (StreamWriter sw = new StreamWriter(file, false, Encoding.UTF8))
 			{
@@ -134,6 +140,29 @@ namespace IRCRelay
 			saveConfig();
 		}
 
+		public void setId(String newid)
+		{
+			if (mainConfig.IRCLogMessages)
+				LogManager.WriteLog("[CallManager] add id" +id, "log.txt");
+			id = newid;
+			saveConfig();
+		}
+
+		public string getId()
+		{
+			return id;
+		}
+
+
+		public DateTime getStartDate()
+		{
+			return startDate;
+		}
+
+		public DateTime getEndDate()
+		{
+			return endDate;
+		}
 
 		public void RemoveMember(String key)
 		{

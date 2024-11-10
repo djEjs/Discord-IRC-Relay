@@ -26,6 +26,7 @@ using JsonConfig;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
+using System.Linq;
 
 namespace IRCRelay.LearnDB
 {
@@ -65,6 +66,20 @@ namespace IRCRelay.LearnDB
 					}
 				}
 			}
+		}
+
+		public KeyValuePair<string, string>? GetLastAniEntry()
+		{
+			var lastEntry = learndbMap
+				.Where(entry => entry.Key.StartsWith("심심빙애니"))
+				.OrderByDescending(entry =>
+				{
+			int.TryParse(entry.Key.Replace("심심빙애니", ""), out int number);
+					return number;
+				})
+				.FirstOrDefault();
+
+			return lastEntry.Equals(default(KeyValuePair<string, string>)) ? (KeyValuePair<string, string>?)null : lastEntry;
 		}
 
 		private void saveConfig()

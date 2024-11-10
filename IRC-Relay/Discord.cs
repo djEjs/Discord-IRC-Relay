@@ -367,43 +367,6 @@ namespace IRCRelay
 					}
 				}
 
-				if (msg_split[0] == "~추가")
-				{
-					if (msg_split.Length > 2)
-					{
-						string value = LearnDBManager.Instance.getString(msg_split[1]);
-
-						if (value == null)
-						{
-							var str = "";
-							for (int i = 2; i < msg_split.Length; i++)
-								str += (msg_split.Length == i + 1) ? msg_split[i] : msg_split[i] + ' ';
-
-							LearnDBManager.Instance.SaveString(msg_split[1], str);
-							var saveString = "\"" + msg_split[1] + "\" 존재하지 않는 단어이므로 새로 저장했습니다.";
-							session.SendMessage(Session.TargetBot.Discord, saveString);
-							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
-						}
-						else
-						{
-							var str = value + ", ";
-							for (int i = 2; i < msg_split.Length; i++)
-								str += (msg_split.Length == i+1)? msg_split[i] : msg_split[i] + ' ';
-
-							LearnDBManager.Instance.SaveString(msg_split[1], str);
-							var saveString = "\"" + msg_split[1] + "\"에 덧붙여서 추가했습니다.";
-							session.SendMessage(Session.TargetBot.Discord, saveString);
-							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
-
-						}
-					}
-					else
-					{
-						var info = "~추가 명령어 사용법 예시: **~추가 기억단어 추가할말**";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-				}
 
 				if (msg_split[0] == "~알려")
 				{
@@ -550,19 +513,103 @@ namespace IRCRelay
 						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 					}
 				}
-				if (msg_split[0] == "~상영회")
+				if (msg_split[0] == "~상영회" || msg_split[0] == "~심심빙애니" || msg_split[0] == "~심심빙상영회")
 				{
-					if (msg_split.Length == 3)
+					string info = "현재 상영회[";
+
+					info += CallManager.Instance.getId();
+					info += "] ";
+
+					DateTime startDate = CallManager.Instance.getStartDate();
+					DateTime endDate = CallManager.Instance.getEndDate();
+
+					if(endDate.Year < 2090)
 					{
-						CallManager.Instance.AddDate(msg_split[1], msg_split[2]);
-						DateTime startDate = Convert.ToDateTime(msg_split[1]);
-						DateTime endDate = Convert.ToDateTime(msg_split[2]);
+						info += "예정일정[";
+						info += startDate.ToString();
+						info += " -> ";
+						info += endDate.ToString();
+						info += "] ";
+					} else
+					{
+						info += "시작일정[";
+						info += startDate.ToString();
+						info += "] ";
+					}
+					KeyValuePair<string, string>? entry = LearnDBManager.Instance.GetLastAniEntry();
+					if(entry != null)
+					{
+						info = "다음 상영회[";
+						info += entry.Value.Key;
+						info += " : ";
+						info += "] ";
+						if (msg_split.Length > 2 && msg_split[1] == "추가")
+						{
+							msg_split[0] = "~추가";
+							msg_split[1] = entry.Value.Key;
+						}
+					}
+				}
+
+
+				if (msg_split[0] == "~추가")
+				{
+					if (msg_split.Length > 2)
+					{
+						string value = LearnDBManager.Instance.getString(msg_split[1]);
+
+						if (value == null)
+						{
+							var str = "";
+							for (int i = 2; i < msg_split.Length; i++)
+								str += (msg_split.Length == i + 1) ? msg_split[i] : msg_split[i] + ' ';
+
+							LearnDBManager.Instance.SaveString(msg_split[1], str);
+							var saveString = "\"" + msg_split[1] + "\" 존재하지 않는 단어이므로 새로 저장했습니다.";
+							session.SendMessage(Session.TargetBot.Discord, saveString);
+							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
+						}
+						else
+						{
+							var str = value + ", ";
+							for (int i = 2; i < msg_split.Length; i++)
+								str += (msg_split.Length == i + 1) ? msg_split[i] : msg_split[i] + ' ';
+
+							LearnDBManager.Instance.SaveString(msg_split[1], str);
+							var saveString = "\"" + msg_split[1] + "\"에 덧붙여서 추가했습니다.";
+							session.SendMessage(Session.TargetBot.Discord, saveString);
+							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
+
+						}
+					}
+					else
+					{
+						var info = "~추가 명령어 사용법 예시: **~추가 기억단어 추가할말**";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+					}
+				}
+
+				if (msg_split[0] == "~상영회시작")
+				{
+					if (msg_split.Length == 4 || msg_split.Length == 3)
+					{
+						string start_time = msg_split[2];
+						string end_time = msg_split.Length == 4 ? msg_split[3] : "2099/12/31";
+
+						CallManager.Instance.setId(msg_split[1]);
+						CallManager.Instance.AddDate(start_time, end_time);
+						DateTime startDate = Convert.ToDateTime(start_time);
+						DateTime endDate = Convert.ToDateTime(end_time);
 						startDate = new DateTime(startDate.Year, startDate.Month, startDate.Day, 0, 1, 0);
 						endDate = new DateTime(endDate.Year, endDate.Month, endDate.Day, 23, 59, 0);
 						string info = "상영회 예정 날짜 [";
 						info += startDate.ToString();
-						info += "] -> [";
-						info += endDate.ToString();
+						if(msg_split.Length == 3)
+						{
+							info += "] -> [";
+							info += endDate.ToString();
+						}
 						info += "] ~상영회참가, ~상영회탈퇴 로 참여하세요.";
 						session.SendMessage(Session.TargetBot.Discord, info);
 						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
