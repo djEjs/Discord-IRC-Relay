@@ -549,6 +549,8 @@ namespace IRCRelay
 							msg_split[1] = entry.Value.Key;
 						}
 					}
+					session.SendMessage(Session.TargetBot.Discord, info);
+					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 				}
 
 
