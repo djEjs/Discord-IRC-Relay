@@ -213,11 +213,28 @@ namespace IRCRelay
 				},
 				});
 
+
+				// Null check for completionResult
+				if (completionResult == null)
+				{
+					throw new Exception("Completion result is null. Please check the API call.");
+				}
+
+				// Check if choices exist
+				if (completionResult.Choices == null || completionResult.Choices.Count == 0)
+				{
+					throw new Exception("No choices returned from OpenAI API.");
+				}
+
 				if (completionResult.Successful)
 				{
 					string str = "";
 					foreach (var choice in completionResult.Choices)
 					{
+						if (choice.Message?.Content == null)
+						{
+							throw new Exception("Choice message content is null.");
+						}
 						session.SendMessage(Session.TargetBot.Discord, choice.Message.Content);
 						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, choice.Message.Content);
 						str += choice.Message.Content;
