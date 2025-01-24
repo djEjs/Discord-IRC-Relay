@@ -93,7 +93,7 @@ namespace IRCRelay
 				openAiService = new OpenAIService(new OpenAiOptions()
 				{
 					ApiKey = config.AIApiKey,
-					DefaultModelId = Models.Gpt_4o_mini
+					DefaultModelId = Models.Gpt_4o
 				});
 			}
 			catch (Exception ex)
@@ -209,7 +209,7 @@ namespace IRCRelay
 				ChatMessage.FromSystem(string.Join("\n", config.SystemContent)),
 				ChatMessage.FromUser(userMessage)
 			},
-					Model = Models.Gpt_4o_mini
+					Model = Models.Gpt_4o
 				});
 
 				if (completionResult.Successful)
