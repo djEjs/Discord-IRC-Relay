@@ -24,6 +24,10 @@ using Discord;
 using Discord.Commands;
 using Discord.Net.Providers.WS4Net;
 using Discord.WebSocket;
+using OpenAI;
+using OpenAI.Managers;
+using OpenAI.ObjectModels;
+using OpenAI.ObjectModels.RequestModels;
 
 using IRCRelay.Logs;
 using IRCRelay.Emoji;
@@ -52,6 +56,7 @@ namespace IRCRelay
 		private IServiceProvider services;
 		private dynamic config;
 		private Random random;
+		private OpenAIService openAiService;
 
 		public DiscordSocketClient Client { get => client; }
 
@@ -59,6 +64,8 @@ namespace IRCRelay
 		{
 			this.config = config;
 			this.session = session;
+
+
 
 			var socketConfig = new DiscordSocketConfig
 			{
@@ -80,6 +87,12 @@ namespace IRCRelay
 			//client.ReactionAdded += OnDiscordReactionAdded;
 
 			random = new Random();
+
+			var openAiService = new OpenAIService(new OpenAiOptions()
+			{
+				ApiKey = config.AIApiKey,
+				DefaultModelId = Models.Gpt_4o_mini
+			});
 		}
 
 		private async Task OnDiscordReactionAdded(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
@@ -178,6 +191,41 @@ namespace IRCRelay
 			session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 		}
 
+		public async Task<string> CreateOpenAIChat(string userName, string userMessage)
+		{
+			try
+			{
+				var completionResult = await openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
+				{
+
+					Messages = new List<ChatMessage>
+				{
+					ChatMessage.FromSystem(string.Join("\n", config.SystemContent)),
+					ChatMessage.FromUser(userMessage)
+				},
+				});
+
+				if (completionResult.Successful)
+				{
+					string str = "";
+					foreach (var choice in completionResult.Choices)
+					{
+						session.SendMessage(Session.TargetBot.Discord, choice.Message.Content);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, choice.Message.Content);
+						str += choice.Message.Content;
+					}
+					return str;
+				}
+			}
+			catch (Exception ex)
+			{
+				if (config.IRCLogMessages)
+					LogManager.WriteLog(MsgSendType.DiscordToIRC, userName, "->[Exception caught]" + ex.Message, "log.txt");
+			}
+			session.SendMessage(Session.TargetBot.Discord, "에러데스와");
+			session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, "에러데스와");
+			return "에러데스와";
+		}
 
 		public async Task OnDiscordMessage(SocketMessage messageParam)
 		{
@@ -368,6 +416,24 @@ namespace IRCRelay
 				}
 
 
+
+				if (msg_split[0] == "~심심빙봇")
+				{
+					if (msg_split.Length >= 2)
+					{
+						var str = "";
+						for (int i = 1; i < msg_split.Length; i++)
+							str += (msg_split.Length == i + 1) ? msg_split[i] : msg_split[i] + ' ';
+
+						await CreateOpenAIChat(username, str);
+					}
+					else
+					{
+						var info = "~심심빙봇 명령어 사용법 예시: **~심심빙봇 죽어**";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+					}
+				}
 				if (msg_split[0] == "~알려")
 				{
 					if (msg_split.Length == 2)
