@@ -203,16 +203,38 @@ namespace IRCRelay
 		{
 			try
 			{
+				// Ensure config is loaded correctly
+				if (config == null)
+				{
+					throw new Exception("Config object is null. Ensure settings.json is loaded correctly.");
+				}
+				if (config.SystemContent == null || config.SystemContent.Length == 0)
+				{
+					throw new Exception("Config.SystemContent is null or empty.");
+				}
+				if (config.IRCChannel == null)
+				{
+					throw new Exception("Config.IRCChannel is null.");
+				}
+
+				// Ensure session is initialized
+				if (session == null)
+				{
+					throw new Exception("Session object is null.");
+				}
+				if (session.Irc?.Client == null)
+				{
+					throw new Exception("Session.Irc.Client is null.");
+				}
+
 				var completionResult = await openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
 				{
-
 					Messages = new List<ChatMessage>
-				{
-					ChatMessage.FromSystem(string.Join("\n", config.SystemContent)),
-					ChatMessage.FromUser(userMessage)
-				},
+			{
+				ChatMessage.FromSystem(string.Join("\n", config.SystemContent)),
+				ChatMessage.FromUser(userMessage)
+			},
 				});
-
 
 				// Null check for completionResult
 				if (completionResult == null)
@@ -244,11 +266,14 @@ namespace IRCRelay
 			}
 			catch (Exception ex)
 			{
-				if (config.IRCLogMessages)
+				if (config?.IRCLogMessages == true)
+				{
 					LogManager.WriteLog(MsgSendType.DiscordToIRC, userName, "->[Exception caught]" + ex.Message, "log.txt");
+				}
 			}
-			session.SendMessage(Session.TargetBot.Discord, "에러데스와");
-			session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, "에러데스와");
+
+			session?.SendMessage(Session.TargetBot.Discord, "에러데스와");
+			session?.Irc?.Client?.SendMessage(SendType.Message, config.IRCChannel, "에러데스와");
 			return "에러데스와";
 		}
 
