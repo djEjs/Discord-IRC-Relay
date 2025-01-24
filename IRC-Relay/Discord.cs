@@ -449,7 +449,7 @@ namespace IRCRelay
 
 
 
-				if (msg_split[0] == "~심심빙봇")
+				if (msg_split[0] == "~심심빙봇" || msg_split[0] == "~봇")
 				{
 					if (msg_split.Length >= 2)
 					{
@@ -461,7 +461,7 @@ namespace IRCRelay
 					}
 					else
 					{
-						var info = "~심심빙봇 명령어 사용법 예시: **~심심빙봇 죽어**";
+						var info = "~심심빙봇 명령어 사용법 예시: **~봇 죽어**";
 						session.SendMessage(Session.TargetBot.Discord, info);
 						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 					}
