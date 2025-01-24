@@ -98,8 +98,7 @@ namespace IRCRelay
 			}
 			catch (Exception ex)
 			{
-				if (config.IRCLogMessages)
-					LogManager.WriteLog(MsgSendType.DiscordToIRC, "init error", "->[Exception caught]" + ex.Message, "log.txt");
+				Console.WriteLine("Exception:" + ex.Message);
 			}
 		}
 
@@ -203,10 +202,14 @@ namespace IRCRelay
 		{
 			try
 			{
+				
+
 
 				Console.WriteLine("CreateOpenAIChat userName:" + userName);
 				Console.WriteLine("CreateOpenAIChat userMessage:" + userMessage);
-				foreach(var systemContent in config.SystemContent)
+				Console.WriteLine("openAiService openAiService:" + openAiService);
+				Console.WriteLine("openAiService ChatCompletion:" + openAiService.ChatCompletion);
+				foreach (var systemContent in config.SystemContent)
 				{
 					Console.WriteLine("CreateOpenAIChat SystemContent:" + systemContent);
 
@@ -220,6 +223,7 @@ namespace IRCRelay
 				ChatMessage.FromSystem(string.Join("\n", config.SystemContent)),
 				ChatMessage.FromUser(userMessage)
 			},
+					Model = Models.Gpt_4o_mini
 				});
 
 				Console.WriteLine("CreateOpenAIChat completionResult:" + completionResult);
