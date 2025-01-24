@@ -90,17 +90,11 @@ namespace IRCRelay
 
 			try
 			{
-				Console.WriteLine("create openAiService");
-				var openAiService = new OpenAIService(new OpenAiOptions()
+				openAiService = new OpenAIService(new OpenAiOptions()
 				{
 					ApiKey = config.AIApiKey,
 					DefaultModelId = Models.Gpt_4o_mini
 				});
-				if(openAiService == null)
-				{
-					Console.WriteLine("openAiService is null");
-				}
-				Console.WriteLine("openAiService : " + openAiService);
 			}
 			catch (Exception ex)
 			{
