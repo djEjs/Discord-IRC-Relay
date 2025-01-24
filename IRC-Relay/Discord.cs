@@ -202,20 +202,6 @@ namespace IRCRelay
 		{
 			try
 			{
-				
-
-
-				Console.WriteLine("CreateOpenAIChat userName:" + userName);
-				Console.WriteLine("CreateOpenAIChat userMessage:" + userMessage);
-				Console.WriteLine("openAiService openAiService:" + openAiService);
-				Console.WriteLine("openAiService ChatCompletion:" + openAiService.ChatCompletion);
-				foreach (var systemContent in config.SystemContent)
-				{
-					Console.WriteLine("CreateOpenAIChat SystemContent:" + systemContent);
-
-				}
-				Console.WriteLine("CreateOpenAIChat config.SystemContent:" + config.SystemContent);
-
 				var completionResult = await openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
 				{
 					Messages = new List<ChatMessage>
@@ -269,6 +255,15 @@ namespace IRCRelay
 			}
 			catch (Exception ex)
 			{
+				var errorDetails = $"->[Exception caught]\n" +
+								   $"Message: {ex.Message}\n" +
+								   $"StackTrace: {ex.StackTrace}\n" +
+								   $"InnerException: {ex.InnerException?.Message ?? "None"}\n" +
+								   $"Source: {ex.Source}\n" +
+								   $"TargetSite: {ex.TargetSite}";
+
+				Console.WriteLine("Message" + errorDetails);
+
 				if (config.IRCLogMessages == true)
 				{
 					LogManager.WriteLog(MsgSendType.DiscordToIRC, userName, "->[Exception caught]" + ex.Message, "log.txt");
