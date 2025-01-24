@@ -203,29 +203,15 @@ namespace IRCRelay
 		{
 			try
 			{
-				// Ensure config is loaded correctly
-				if (config == null)
-				{
-					throw new Exception("Config object is null. Ensure settings.json is loaded correctly.");
-				}
-				if (config.SystemContent == null || config.SystemContent.Length == 0)
-				{
-					throw new Exception("Config.SystemContent is null or empty.");
-				}
-				if (config.IRCChannel == null)
-				{
-					throw new Exception("Config.IRCChannel is null.");
-				}
 
-				// Ensure session is initialized
-				if (session == null)
+				Console.WriteLine("CreateOpenAIChat userName:" + userName);
+				Console.WriteLine("CreateOpenAIChat userMessage:" + userMessage);
+				foreach(var systemContent in config.SystemContent)
 				{
-					throw new Exception("Session object is null.");
+					Console.WriteLine("CreateOpenAIChat SystemContent:" + systemContent);
+
 				}
-				if (session.Irc?.Client == null)
-				{
-					throw new Exception("Session.Irc.Client is null.");
-				}
+				Console.WriteLine("CreateOpenAIChat config.SystemContent:" + config.SystemContent);
 
 				var completionResult = await openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
 				{
@@ -235,6 +221,8 @@ namespace IRCRelay
 				ChatMessage.FromUser(userMessage)
 			},
 				});
+
+				Console.WriteLine("CreateOpenAIChat completionResult:" + completionResult);
 
 				// Null check for completionResult
 				if (completionResult == null)
@@ -248,11 +236,22 @@ namespace IRCRelay
 					throw new Exception("No choices returned from OpenAI API.");
 				}
 
+				Console.WriteLine("completionResult:" + completionResult.Error?.Message);
 				if (completionResult.Successful)
 				{
 					string str = "";
+
+
+
+
 					foreach (var choice in completionResult.Choices)
 					{
+						Console.WriteLine("Message" + choice.Message);
+						if (choice.Message == null)
+						{
+							throw new Exception("Choice message is null.");
+						}
+
 						if (choice.Message?.Content == null)
 						{
 							throw new Exception("Choice message content is null.");
@@ -266,7 +265,7 @@ namespace IRCRelay
 			}
 			catch (Exception ex)
 			{
-				if (config?.IRCLogMessages == true)
+				if (config.IRCLogMessages == true)
 				{
 					LogManager.WriteLog(MsgSendType.DiscordToIRC, userName, "->[Exception caught]" + ex.Message, "log.txt");
 				}
