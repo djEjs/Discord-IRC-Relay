@@ -88,11 +88,19 @@ namespace IRCRelay
 
 			random = new Random();
 
-			var openAiService = new OpenAIService(new OpenAiOptions()
+			try
 			{
-				ApiKey = config.AIApiKey,
-				DefaultModelId = Models.Gpt_4o_mini
-			});
+				var openAiService = new OpenAIService(new OpenAiOptions()
+				{
+					ApiKey = config.AIApiKey,
+					DefaultModelId = Models.Gpt_4o_mini
+				});
+			}
+			catch (Exception ex)
+			{
+				if (config.IRCLogMessages)
+					LogManager.WriteLog(MsgSendType.DiscordToIRC, "init error", "->[Exception caught]" + ex.Message, "log.txt");
+			}
 		}
 
 		private async Task OnDiscordReactionAdded(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
