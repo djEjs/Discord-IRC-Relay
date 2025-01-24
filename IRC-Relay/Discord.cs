@@ -207,6 +207,7 @@ namespace IRCRelay
 					Messages = new List<ChatMessage>
 			{
 				ChatMessage.FromSystem(string.Join("\n", config.SystemContent)),
+				ChatMessage.FromSystem("지금 너랑 대화하는 사람의 이름은 " + userName + " 이야."),
 				ChatMessage.FromUser(userMessage)
 			},
 					Model = Models.Gpt_4o
