@@ -212,21 +212,6 @@ namespace IRCRelay
 					Model = Models.Gpt_4o_mini
 				});
 
-				Console.WriteLine("CreateOpenAIChat completionResult:" + completionResult);
-
-				// Null check for completionResult
-				if (completionResult == null)
-				{
-					throw new Exception("Completion result is null. Please check the API call.");
-				}
-
-				// Check if choices exist
-				if (completionResult.Choices == null || completionResult.Choices.Count == 0)
-				{
-					throw new Exception("No choices returned from OpenAI API.");
-				}
-
-				Console.WriteLine("completionResult:" + completionResult.Error?.Message);
 				if (completionResult.Successful)
 				{
 					string str = "";
@@ -236,7 +221,6 @@ namespace IRCRelay
 
 					foreach (var choice in completionResult.Choices)
 					{
-						Console.WriteLine("Message" + choice.Message);
 						if (choice.Message == null)
 						{
 							throw new Exception("Choice message is null.");
