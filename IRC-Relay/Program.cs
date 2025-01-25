@@ -23,6 +23,7 @@ using Discord;
 using JsonConfig;
 using IRCRelay.Emoji;
 using IRCRelay.LearnDB;
+using IRCRelay.LearnAI;
 using IRCRelay.Logs;
 
 namespace IRCRelay
@@ -54,6 +55,15 @@ namespace IRCRelay
 			try
 			{
 				LearnDBManager.Instance.setConfig(config);
+			}
+			catch (Exception e)
+			{
+				if (config.IRCLogMessages)
+					LogManager.WriteLog("[Exception caught]" + e.ToString(), "log.txt");
+			}
+			try
+			{
+				LearnAIManager.Instance.setConfig(config);
 			}
 			catch (Exception e)
 			{
