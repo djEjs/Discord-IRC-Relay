@@ -20,6 +20,7 @@ using System.IO;
 using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 using IRCRelay.Logs;
 using JsonConfig;
@@ -116,7 +117,23 @@ namespace IRCRelay.Emoji
 				emojiCountMap.Add(emojiString, 1);
 			}
 		}
-		
+
+		public string ReplaceStringWithEmoji(string str)
+		{
+			if (string.IsNullOrEmpty(str))
+				return str;
+
+			// 정규식을 사용해 :~~~: 패턴 찾기
+			string pattern = @":(\w+):";
+
+			// 매칭된 패턴을 치환
+			return Regex.Replace(str, pattern, match =>
+			{
+				string emojiKey = match.Value;
+				return ReplaceEmoji(emojiKey);
+			});
+		}
+
 		public void SaveEmoji(String emojiString, String simpleString)
 		{
 			AddEmojiCount(emojiString);

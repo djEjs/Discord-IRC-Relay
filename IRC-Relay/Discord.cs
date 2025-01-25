@@ -30,6 +30,7 @@ using OpenAI.ObjectModels;
 using OpenAI.ObjectModels.RequestModels;
 
 using IRCRelay.Logs;
+using IRCRelay.LearnAI;
 using IRCRelay.Emoji;
 using IRCRelay.LearnDB;
 using System.Net;
@@ -202,14 +203,30 @@ namespace IRCRelay
 		{
 			try
 			{
+				List<ChatMessage> messagesList = new List<ChatMessage>();
+				foreach (string str in config.SystemContent)
+				{
+					messagesList.Add(ChatMessage.FromSystem(EmojiManager.Instance.ReplaceStringWithEmoji(str)));
+					Console.WriteLine("content : " + EmojiManager.Instance.ReplaceStringWithEmoji(str));
+				}
+
+				messagesList.Add(ChatMessage.FromSystem("지금 너랑 대화하는 사람의 이름은 " + userName + " 이야."));
+
+
+				List<string> userContent = LearnAIManager.Instance.searchAllString();
+				foreach (string str in userContent)
+				{
+					messagesList.Add(ChatMessage.FromSystem(EmojiManager.Instance.ReplaceStringWithEmoji(str)));
+					Console.WriteLine("user content : " + EmojiManager.Instance.ReplaceStringWithEmoji(str));
+				}
+
+				messagesList.Add(ChatMessage.FromUser(userMessage));
+
+
+
 				var completionResult = await openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
 				{
-					Messages = new List<ChatMessage>
-			{
-				ChatMessage.FromSystem(string.Join("\n", config.SystemContent)),
-				ChatMessage.FromSystem("지금 너랑 대화하는 사람의 이름은 " + userName + " 이야."),
-				ChatMessage.FromUser(userMessage)
-			},
+					Messages = messagesList,
 					Model = Models.Gpt_4o
 				});
 
@@ -449,6 +466,49 @@ namespace IRCRelay
 				}
 
 
+				if (msg_split[0] == "~조련" || msg_split[0] == "~학습")
+				{
+					if (msg_split.Length >= 2)
+					{
+						var str = "";
+						for (int i = 1; i < msg_split.Length; i++)
+							str += (msg_split.Length == i + 1) ? msg_split[i] : msg_split[i] + ' ';
+
+						if(str.Length > 100)
+						{
+							var saveString = "학습최대치 인당 100글자가 넘었습니다. 현재 " + str.Length + " 글자";
+
+							session.SendMessage(Session.TargetBot.Discord, saveString);
+							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
+						}
+						else
+						{
+							String past = LearnAIManager.Instance.getString(username);
+
+							if (past != null && past.Length > 0)
+							{
+								var saveString = "봇에 새로운 학습 정보를 저장했습니다. 과거 학습 : " + past + "";
+
+								session.SendMessage(Session.TargetBot.Discord, saveString);
+								session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
+							}
+							else
+							{
+								var saveString = "봇에 새로운 학습 정보를 저장했습니다.";
+
+								session.SendMessage(Session.TargetBot.Discord, saveString);
+								session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
+							}
+							LearnAIManager.Instance.SaveString(username, str);
+						}
+					}
+					else
+					{
+						var info = "~조련 명령어(최대 100글자) 사용법 예시: **~조련 1인칭을 심심빙봇으로 하세요.**";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+					}
+				}
 
 				if (msg_split[0] == "~심심빙봇" || msg_split[0] == "~봇")
 				{
