@@ -207,7 +207,8 @@ namespace IRCRelay
 				foreach (string str in config.SystemContent)
 				{
 					messagesList.Add(ChatMessage.FromSystem(EmojiManager.Instance.ReplaceStringWithEmoji(str)));
-					Console.WriteLine("content : " + EmojiManager.Instance.ReplaceStringWithEmoji(str));
+					Console.WriteLine("content : " + str);
+					Console.WriteLine("after content : " + EmojiManager.Instance.ReplaceStringWithEmoji(str));
 				}
 
 				messagesList.Add(ChatMessage.FromSystem("지금 너랑 대화하는 사람의 이름은 " + userName + " 이야."));
@@ -217,7 +218,8 @@ namespace IRCRelay
 				foreach (string str in userContent)
 				{
 					messagesList.Add(ChatMessage.FromSystem(EmojiManager.Instance.ReplaceStringWithEmoji(str)));
-					Console.WriteLine("user content : " + EmojiManager.Instance.ReplaceStringWithEmoji(str));
+					Console.WriteLine("user content : " + str);
+					Console.WriteLine("after user content : " + EmojiManager.Instance.ReplaceStringWithEmoji(str));
 				}
 
 				messagesList.Add(ChatMessage.FromUser(userMessage));
