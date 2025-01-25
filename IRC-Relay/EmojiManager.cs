@@ -120,6 +120,8 @@ namespace IRCRelay.Emoji
 
 		public string ReplaceStringWithEmoji(string str)
 		{
+			if (mainConfig.IRCLogMessages)
+				LogManager.WriteLog("[ReplaceStringWithEmoji] " + str, "log.txt");
 			if (string.IsNullOrEmpty(str))
 				return str;
 
@@ -131,6 +133,9 @@ namespace IRCRelay.Emoji
 			{
 				string emojiKey = match.Value;
 				string emoji = ReplaceEmoji(emojiKey); // 치환 함수 호출
+
+				if (mainConfig.IRCLogMessages)
+					LogManager.WriteLog("[Replace emojiKey] " + emojiKey, "log.txt");
 
 				// 앞뒤 문자 확인
 				char before = match.Index > 0 ? str[match.Index - 1] : ' ';
