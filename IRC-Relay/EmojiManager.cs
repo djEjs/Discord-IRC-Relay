@@ -124,12 +124,12 @@ namespace IRCRelay.Emoji
 				return str;
 
 			// 정규식을 사용해 :~~~: 패턴 찾기
-			string pattern = @"(?<![\d<]):(\w+):(?<![\d<])";
+			string pattern = @"(?<![\d<]):\w+:(?<![\d<])";
 
 			// 매칭된 패턴을 치환
 			return Regex.Replace(str, pattern, match =>
 			{
-				string emojiKey = match.Value; // ':'를 제외한 내부 문자열 추출
+				string emojiKey = match.Value;
 				string emoji = ReplaceEmoji(emojiKey); // 치환 함수 호출
 
 				// 앞뒤 문자 확인
