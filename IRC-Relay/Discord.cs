@@ -206,9 +206,8 @@ namespace IRCRelay
 				List<ChatMessage> messagesList = new List<ChatMessage>();
 				foreach (string str in config.SystemContent)
 				{
-					messagesList.Add(ChatMessage.FromSystem(EmojiManager.Instance.ReplaceStringWithEmoji(str)));
+					messagesList.Add(ChatMessage.FromSystem(str));
 					Console.WriteLine("content : " + str);
-					Console.WriteLine("after content : " + EmojiManager.Instance.ReplaceStringWithEmoji(str));
 				}
 
 				messagesList.Add(ChatMessage.FromSystem("지금 너랑 대화하는 사람의 이름은 " + userName + " 이야."));
@@ -217,9 +216,8 @@ namespace IRCRelay
 				List<string> userContent = LearnAIManager.Instance.searchAllString();
 				foreach (string str in userContent)
 				{
-					messagesList.Add(ChatMessage.FromSystem(EmojiManager.Instance.ReplaceStringWithEmoji(str)));
+					messagesList.Add(ChatMessage.FromSystem(str));
 					Console.WriteLine("user content : " + str);
-					Console.WriteLine("after user content : " + EmojiManager.Instance.ReplaceStringWithEmoji(str));
 				}
 
 				messagesList.Add(ChatMessage.FromUser(userMessage));
@@ -250,9 +248,15 @@ namespace IRCRelay
 						{
 							throw new Exception("Choice message content is null.");
 						}
-						session.SendMessage(Session.TargetBot.Discord, choice.Message.Content);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, choice.Message.Content);
-						str += choice.Message.Content;
+
+						string response = choice.Message.Content;
+
+						Console.WriteLine("response : " + response);
+						Console.WriteLine("after response : " + EmojiManager.Instance.ReplaceStringWithEmoji(response));
+
+						session.SendMessage(Session.TargetBot.Discord, EmojiManager.Instance.ReplaceStringWithEmoji(response));
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, EmojiManager.Instance.ReplaceStringWithEmoji(response));
+						str += EmojiManager.Instance.ReplaceStringWithEmoji(response);
 					}
 					return str;
 				}
