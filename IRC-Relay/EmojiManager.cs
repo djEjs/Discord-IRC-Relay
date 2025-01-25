@@ -124,7 +124,7 @@ namespace IRCRelay.Emoji
 				return str;
 
 			// 정규식을 사용해 :~~~: 패턴 찾기
-			string pattern = @"(?<=\\s|^):(\\w+):(?=\\s|$)";
+			string pattern = @"(?<=\s|^):(\w+):(?=\s|$)";
 
 			// 매칭된 패턴을 치환
 			return Regex.Replace(str, pattern, match =>
