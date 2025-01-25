@@ -343,6 +343,7 @@
     <Compile Include="EmojiManager.cs" />
     <Compile Include="CallManager.cs" />
     <Compile Include="LearnDBManager.cs" />
+    <Compile Include="LearnAIManager.cs" />
     <Compile Include="IRC.cs" />
     <Compile Include="LogManager.cs" />
     <Compile Include="Program.cs" />
