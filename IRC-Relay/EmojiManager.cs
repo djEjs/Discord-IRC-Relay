@@ -124,13 +124,32 @@ namespace IRCRelay.Emoji
 				return str;
 
 			// 정규식을 사용해 :~~~: 패턴 찾기
-			string pattern = @"(?<=\s|^):(\w+):(?=\s|$)";
+			string pattern = @"(?<![\d<]):(\w+):(?<![\d<])";
 
 			// 매칭된 패턴을 치환
 			return Regex.Replace(str, pattern, match =>
 			{
-				string emojiKey = match.Value;
-				return ReplaceEmoji(emojiKey);
+				string emojiKey = match.Groups[1].Value; // ':'를 제외한 내부 문자열 추출
+				string emoji = ReplaceEmoji(emojiKey); // 치환 함수 호출
+
+				// 앞뒤 문자 확인
+				char before = match.Index > 0 ? str[match.Index - 1] : ' ';
+				char after = match.Index + match.Length < str.Length ? str[match.Index + match.Length] : ' ';
+
+
+				// 앞 문자가 '<', 숫자, 공백이 아니면 공백 추가
+				if (before != '<' && !char.IsWhiteSpace(before) && !char.IsDigit(before))
+				{
+					emoji = " " + emoji;
+				}
+
+				// 뒷 문자가 '<', 숫자, 공백이 아니면 공백 추가
+				if (after != '<' && !char.IsWhiteSpace(after) && !char.IsDigit(after))
+				{
+					emoji += " ";
+				}
+
+				return emoji;
 			});
 		}
 
