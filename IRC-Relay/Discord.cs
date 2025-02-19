@@ -923,20 +923,6 @@ namespace IRCRelay
 				}
 
 				string[] parts = formatted.Split('\n');
-				if (parts.Length > 6) // don't spam IRC, please.
-				{
-					await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": Too many lines! If you're meaning to post" +
-						" code blocks, please use \\`\\`\\` to open & close the codeblock." +
-						"\nYour message has been deleted and was not relayed to IRC. Please try again.");
-					await messageParam.DeleteAsync();
-
-					await messageParam.Author.SendMessageAsync("To prevent you from having to re-type your message,"
-						+ " here's what you tried to send: \n ```"
-						+ messageParam.Content
-						+ "```");
-
-					return;
-				}
 
 				if (config.IRCLogMessages)
 					LogManager.WriteLog(MsgSendType.DiscordToIRC, username, formatted, "log.txt");
