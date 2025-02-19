@@ -50,9 +50,19 @@ namespace IRCRelay
 
 		private void TimerCallback(object state)
 		{
-			if(CallManager.Instance.checkAble())
+			bool sanyung = false, onTime = false;
+			string onTimestr = CallManager.Instance.checkAbleForOntime();
+			if (CallManager.Instance.checkAble())
 			{
-				Discord.CallMessage(CallManager.Instance.GetCalls());
+				sanyung = true;
+			}
+			if(onTimestr.Length > 0)
+			{
+				onTime = true;
+			}
+			if (sanyung || onTime)
+			{
+				Discord.CallMessageAsync(onTimestr, sanyung?CallManager.Instance.GetCalls():"");
 			}
 		}
 

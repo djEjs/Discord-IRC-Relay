@@ -131,5 +131,14 @@ namespace IRCRelay.LearnAI
 			}
 			return list;
 		}
+		public List<KeyValuePair<string, string>> searchAllStringPair()
+		{
+			List<KeyValuePair<string, string>> list = new List<KeyValuePair<string, string>>();
+			foreach (KeyValuePair<string, string> item in learnaiMap)
+			{
+				list.Add(item);
+			}
+			return list;
+		}
 	}
 }

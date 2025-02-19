@@ -58,6 +58,7 @@ namespace IRCRelay
 		private dynamic config;
 		private Random random;
 		private OpenAIService openAiService;
+		private bool alarmCall = true;
 
 		public DiscordSocketClient Client { get => client; }
 
@@ -192,11 +193,21 @@ namespace IRCRelay
 		}
 
 
-		public void CallMessage(String users)
+		public async void CallMessageAsync(String time_, String users)
 		{
-			var info = "상영회 시간입니다. : " + users;
-			session.SendMessage(Session.TargetBot.Discord, info);
-			session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+			if(users.Length > 0)
+			{
+				var str = "지금이 " + time_ + "시라는걸 알리면서 지금이 상영회 시간이라고 말해줘.";
+				var info = users;
+				await CreateOpenAIChat("", str);
+				session.SendMessage(Session.TargetBot.Discord, info);
+				session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+			}
+			else if(alarmCall)
+			{
+				var str = "지금이 " + time_ + "시라는걸 알리면서 지금이 ○○ 시간이라고 말해줘. ○○은 현재 시간에 할수있는 할거리로 창의적으로 바꿔줘.";
+				await CreateOpenAIChat("", str);
+			}
 		}
 
 		public async Task<string> CreateOpenAIChat(string userName, string userMessage)
@@ -210,8 +221,10 @@ namespace IRCRelay
 					Console.WriteLine("content : " + str);
 				}
 
-				messagesList.Add(ChatMessage.FromSystem("지금 너랑 대화하는 사람의 이름은 " + userName + " 이야."));
-
+				if(userName != null && userName.Length > 0)
+				{
+					messagesList.Add(ChatMessage.FromSystem("지금 너랑 대화하는 사람의 이름은 " + userName + " 이야."));
+				}
 
 				List<string> userContent = LearnAIManager.Instance.searchAllString();
 				foreach (string str in userContent)
@@ -510,10 +523,26 @@ namespace IRCRelay
 					}
 					else
 					{
-						var info = "~조련 명령어(최대 100글자) 사용법 예시: **~조련 1인칭을 심심빙봇으로 하세요.**";
+						String past = LearnAIManager.Instance.getString(username);
+						var info = "현재 학습 : " + past;
 						session.SendMessage(Session.TargetBot.Discord, info);
 						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 					}
+				}
+				if (msg_split[0] == "~조련목록" || msg_split[0] == "~학습목록")
+				{
+					var info = "현재 학습목록 \n ```";
+					List<KeyValuePair<string, string>> userContent = LearnAIManager.Instance.searchAllStringPair();
+					bool first_ = true;
+					foreach (KeyValuePair<string, string> str in userContent)
+					{
+						if(!first_)
+							info += "\n";
+						info += str.Key + ": " + str.Value;
+						first_ = false;
+					}
+					info += "```";
+					session.SendMessage(Session.TargetBot.Discord, info);
 				}
 
 				if (msg_split[0] == "~심심빙봇" || msg_split[0] == "~봇")
@@ -794,6 +823,23 @@ namespace IRCRelay
 				}
 
 
+				if (msg_split[0] == "~정각알람")
+				{
+					if (alarmCall)
+					{
+						string info = "정각 알람 기능을 껐습니다.";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+						alarmCall = false;
+					}
+					else
+					{
+						string info = "정각 알람 기능을 켰습니다.";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+						alarmCall = true;
+					}
+				}
 				if (msg_split[0] == "~상영회참가")
 				{
 					CallManager.Instance.AddMember(username, userid);
