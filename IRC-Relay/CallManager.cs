@@ -245,7 +245,7 @@ namespace IRCRelay
 			DateTime roundedTime = new DateTime(currentDate.Year, currentDate.Month, currentDate.Day, currentDate.Hour, 0, 0);
 
 			// 오전 8시부터 저녁 9시까지 (21:00 포함)
-			if (currentDate.Hour >= 8 && currentDate.Hour <= 21 && currentDate.Minute < 5)
+			if (currentDate.Hour >= 8 && currentDate.Hour <= 23 && currentDate.Minute < 5)
 			{
 				if (lastDate != roundedTime) // 같은 시간에 호출된 적 없는지 확인
 				{
