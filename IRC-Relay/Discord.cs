@@ -933,13 +933,21 @@ namespace IRCRelay
 					session.SendMessage(Session.TargetBot.IRC, attachment.Url, username);
 				}
 
-				foreach (String part in parts) // we're going to send each line indpependently instead of letting irc clients handle it.
+				if(parts.Length < 6)
 				{
-					if (part.Trim().Length != 0) // if the string is not empty or just spaces
+					foreach (String part in parts) // we're going to send each line indpependently instead of letting irc clients handle it.
 					{
-						session.SendMessage(Session.TargetBot.IRC, part, username);
+						if (part.Trim().Length != 0) // if the string is not empty or just spaces
+						{
+							session.SendMessage(Session.TargetBot.IRC, part, username);
+						}
 					}
 				}
+				else
+				{
+					session.SendMessage(Session.TargetBot.IRC, "<<6줄 이상의 텍스트가 감지되었습니다.>>", username);
+				}
+
 			}
 			catch (Exception e)
 			{
