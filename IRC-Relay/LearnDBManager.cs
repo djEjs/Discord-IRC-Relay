@@ -105,11 +105,12 @@ namespace IRCRelay.LearnDB
 			json.Add("learndb", jarray);
 
 
-			foreach (var learnString in liveMap)
+			jarray = new JArray();
+			foreach (var liveString in liveMap)
 			{
 				var jsonChild = new JObject();
-				jsonChild.Add("key", learnString.Key);
-				jsonChild.Add("value", learnString.Value);
+				jsonChild.Add("key", liveString.Key);
+				jsonChild.Add("value", liveString.Value);
 				jarray.Add(jsonChild);
 			}
 			json.Add("live", jarray);
