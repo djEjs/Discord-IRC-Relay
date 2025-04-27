@@ -195,6 +195,7 @@ namespace IRCRelay
 
 		public async Task CheckLiveStatus()
 		{
+			LogManager.WriteLog(MsgSendType.DiscordToIRC, "CheckLiveStatus", "[CheckLiveStatus]", "log.txt");
 			try
 			{
 				List<string> channelIds = LearnDBManager.Instance.getLivesLink();
@@ -203,6 +204,7 @@ namespace IRCRelay
 				{
 					foreach (var channelId in channelIds)
 					{
+						LogManager.WriteLog(MsgSendType.DiscordToIRC, "CheckLiveStatus", "[channelId]:" + channelId, "log.txt");
 						// 이미 OPEN인 경우 스킵
 						string previousState = LearnDBManager.Instance.getLiveState(channelId);
 						if (previousState == "OPEN")
@@ -214,6 +216,7 @@ namespace IRCRelay
 
 
 						string responseBody = await response.Content.ReadAsStringAsync();
+						LogManager.WriteLog(MsgSendType.DiscordToIRC, "CheckLiveStatus", "[responseBody]:" + responseBody, "log.txt");
 						JObject root = JObject.Parse(responseBody);
 
 						string status = root["content"]?["status"]?.ToString();
