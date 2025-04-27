@@ -195,7 +195,6 @@ namespace IRCRelay
 
 		public async Task CheckLiveStatus()
 		{
-			LogManager.WriteLog(MsgSendType.DiscordToIRC, "CheckLiveStatus", "[CheckLiveStatus]", "log.txt");
 			try
 			{
 				List<string> channelIds = LearnDBManager.Instance.getLivesLink();
@@ -206,10 +205,7 @@ namespace IRCRelay
 					{
 						try
 						{
-							// 이미 OPEN인 경우 스킵
 							string previousState = LearnDBManager.Instance.getLiveState(channelId);
-							if (previousState == "OPEN")
-								continue;
 
 							string url = $"https://api.chzzk.naver.com/polling/v2/channels/{channelId}/live-status";
 							HttpResponseMessage response = await client.GetAsync(url);
