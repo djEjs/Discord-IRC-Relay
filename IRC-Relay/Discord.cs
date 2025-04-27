@@ -204,43 +204,50 @@ namespace IRCRelay
 				{
 					foreach (var channelId in channelIds)
 					{
-						LogManager.WriteLog(MsgSendType.DiscordToIRC, "CheckLiveStatus", "[channelId]:" + channelId, "log.txt");
-						// 이미 OPEN인 경우 스킵
-						string previousState = LearnDBManager.Instance.getLiveState(channelId);
-						if (previousState == "OPEN")
-							continue;
-
-						string url = $"https://api.chzzk.naver.com/polling/v2/channels/{channelId}/live-status";
-						LogManager.WriteLog(MsgSendType.DiscordToIRC, "CheckLiveStatus", "[url]:" + url, "log.txt");
-						HttpResponseMessage response = await client.GetAsync(url);
-						response.EnsureSuccessStatusCode();
-
-
-						string responseBody = await response.Content.ReadAsStringAsync();
-						LogManager.WriteLog(MsgSendType.DiscordToIRC, "CheckLiveStatus", "[responseBody]:" + responseBody, "log.txt");
-						JObject root = JObject.Parse(responseBody);
-
-						string status = root["content"]?["status"]?.ToString();
-						string liveTitle = root["content"]?["liveTitle"]?.ToString();
-
-						if (status == "OPEN")
+						try
 						{
-							string info = $"방송 시작데스와: {liveTitle} (https://chzzk.naver.com/{channelId})";
-							session.SendMessage(Session.TargetBot.Discord, info);
-							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+							// 이미 OPEN인 경우 스킵
+							string previousState = LearnDBManager.Instance.getLiveState(channelId);
+							if (previousState == "OPEN")
+								continue;
 
-							LearnDBManager.Instance.SaveLive(channelId, "OPEN");
-						}
-						else
-						{
-							// 방송이 CLOSE로 바뀌었을 때 방송 종료 알림 추가하고 싶으면 여기서 info 보내면 돼
-							if (previousState == "OPEN" && status == "CLOSE")
+							string url = $"https://api.chzzk.naver.com/polling/v2/channels/{channelId}/live-status";
+							HttpResponseMessage response = await client.GetAsync(url);
+							response.EnsureSuccessStatusCode();
+
+
+							string responseBody = await response.Content.ReadAsStringAsync();
+							JObject root = JObject.Parse(responseBody);
+
+							string status = root["content"]?["status"]?.ToString();
+							string liveTitle = root["content"]?["liveTitle"]?.ToString();
+
+							if (status == "OPEN")
 							{
-								string info = $"방송 종료데스와: {liveTitle} (https://chzzk.naver.com/{channelId})";
+								string info = $"방송 시작데스와: {liveTitle} (https://chzzk.naver.com/{channelId})";
 								session.SendMessage(Session.TargetBot.Discord, info);
 								session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+
+								LearnDBManager.Instance.SaveLive(channelId, "OPEN");
 							}
-							LearnDBManager.Instance.SaveLive(channelId, "CLOSE");
+							else
+							{
+								// 방송이 CLOSE로 바뀌었을 때 방송 종료 알림 추가하고 싶으면 여기서 info 보내면 돼
+								if (previousState == "OPEN" && status == "CLOSE")
+								{
+									string info = $"방송 종료데스와: {liveTitle} (https://chzzk.naver.com/{channelId})";
+									session.SendMessage(Session.TargetBot.Discord, info);
+									session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+								}
+								LearnDBManager.Instance.SaveLive(channelId, "CLOSE");
+							}
+						}
+						catch (Exception ex)
+						{
+							if (config.IRCLogMessages == true)
+							{
+								LogManager.WriteLog(MsgSendType.DiscordToIRC, "channelId", "->[Exception caught]" + ex.Message, "log.txt");
+							}
 						}
 					}
 				}
