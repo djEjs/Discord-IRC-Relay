@@ -52,7 +52,7 @@ namespace IRCRelay
 		private void TimerCallback(object state)
 		{
 			//라이브 처리
-			Discord.CheckLiveStatus();
+			_ = Discord.CheckLiveStatus();
 
 
 			bool sanyung = false, onTime = false;

@@ -193,7 +193,7 @@ namespace IRCRelay
 		}
 
 
-		public async void CheckLiveStatus()
+		public async Task CheckLiveStatus()
 		{
 			try
 			{
@@ -229,6 +229,13 @@ namespace IRCRelay
 						}
 						else
 						{
+							// 방송이 CLOSE로 바뀌었을 때 방송 종료 알림 추가하고 싶으면 여기서 info 보내면 돼
+							if (previousState == "OPEN" && status == "CLOSE")
+							{
+								string info = $"방송 종료데스와: {liveTitle} (https://chzzk.naver.com/{channelId})";
+								session.SendMessage(Session.TargetBot.Discord, info);
+								session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+							}
 							LearnDBManager.Instance.SaveLive(channelId, "CLOSE");
 						}
 					}
