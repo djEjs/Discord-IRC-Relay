@@ -45,7 +45,7 @@ namespace IRCRelay
 		{
 			this.config = config;
 			alive = true;
-			timer = new Timer(TimerCallback, null, 0, 60000);
+			timer = new Timer(TimerCallback, null, 60000, 60000);
 		}
 
 

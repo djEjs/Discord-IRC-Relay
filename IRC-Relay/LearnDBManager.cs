@@ -191,7 +191,7 @@ namespace IRCRelay.LearnDB
 			List<string> list = new List<string>();
 			foreach (KeyValuePair<string, string> item in liveMap)
 			{
-				list.Add(item.Key);
+				list.Add(item.Value);
 			}
 			return list;
 		}
