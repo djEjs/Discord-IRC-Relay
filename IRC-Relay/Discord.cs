@@ -210,7 +210,7 @@ namespace IRCRelay
 						if (previousState == "OPEN")
 							continue;
 
-						string url = $"https://api.chzzk.naver.com/polling/v1/channels/{channelId}/live-status";
+						string url = $"https://api.chzzk.naver.com/polling/v2/channels/{channelId}/live-status";
 						LogManager.WriteLog(MsgSendType.DiscordToIRC, "CheckLiveStatus", "[url]:" + url, "log.txt");
 						HttpResponseMessage response = await client.GetAsync(url);
 						response.EnsureSuccessStatusCode();
