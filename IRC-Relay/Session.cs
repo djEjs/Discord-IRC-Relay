@@ -51,7 +51,6 @@ namespace IRCRelay
 
 		private void TimerCallback(object state)
 		{
-			_ = Discord.Log(new LogMessage(LogSeverity.Critical, "TimerCallback", "TimerCallback"));
 			//라이브 처리
 			if (Discord != null)
 			{

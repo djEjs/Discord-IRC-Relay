@@ -71,7 +71,7 @@ namespace IRCRelay.LearnDB
 				{
 					foreach (JObject jobj in readJson["live"])
 					{
-						learndbMap.Add(jobj["key"].ToString(), jobj["value"].ToString());
+						liveMap.Add(jobj["key"].ToString(), jobj["value"].ToString());
 					}
 				}
 			}
@@ -160,7 +160,15 @@ namespace IRCRelay.LearnDB
 			}
 			if (mainConfig.IRCLogMessages)
 				LogManager.WriteLog("[SaveLive] " + key + " -> " + value, "log.txt");
-			learndbMap.Add(key, value);
+
+			if (liveMap.ContainsKey(key))
+			{
+				liveMap[key] = value; // 이미 있으면 수정
+			}
+			else
+			{
+				liveMap.Add(key, value); // 없으면 추가
+			}
 			saveConfig();
 		}
 
