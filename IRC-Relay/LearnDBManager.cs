@@ -173,7 +173,7 @@ namespace IRCRelay.LearnDB
 				liveMap.Remove(key);
 			}
 			if (mainConfig.IRCLogMessages)
-				LogManager.WriteLog("[RemoveLive] " + key + " -> " + value, "log.txt");
+				LogManager.WriteLog("[RemoveLive] " + key, "log.txt");
 			saveConfig();
 		}
 

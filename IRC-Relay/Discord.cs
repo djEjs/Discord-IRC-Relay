@@ -221,7 +221,7 @@ namespace IRCRelay
 
 						if (status == "OPEN")
 						{
-							string info = $"방송 시작: {liveTitle} (https://chzzk.naver.com/{channelId})";
+							string info = $"방송 시작데스와: {liveTitle} (https://chzzk.naver.com/{channelId})";
 							session.SendMessage(Session.TargetBot.Discord, info);
 							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 
