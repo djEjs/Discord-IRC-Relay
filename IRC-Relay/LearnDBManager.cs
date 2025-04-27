@@ -43,6 +43,7 @@ namespace IRCRelay.LearnDB
 		}
 
 		private Dictionary<string, string> learndbMap = new Dictionary<string, string>();
+		private Dictionary<string, string> liveMap = new Dictionary<string, string>();
 		private dynamic mainConfig;
 		private const string file = "learnDB.json";
 
@@ -61,6 +62,14 @@ namespace IRCRelay.LearnDB
 				if (readJson["learndb"] != null)
 				{
 					foreach (JObject jobj in readJson["learndb"])
+					{
+						learndbMap.Add(jobj["key"].ToString(), jobj["value"].ToString());
+					}
+				}
+
+				if (readJson["live"] != null)
+				{
+					foreach (JObject jobj in readJson["live"])
 					{
 						learndbMap.Add(jobj["key"].ToString(), jobj["value"].ToString());
 					}
@@ -95,6 +104,16 @@ namespace IRCRelay.LearnDB
 			}
 			json.Add("learndb", jarray);
 
+
+			foreach (var learnString in liveMap)
+			{
+				var jsonChild = new JObject();
+				jsonChild.Add("key", learnString.Key);
+				jsonChild.Add("value", learnString.Value);
+				jarray.Add(jsonChild);
+			}
+			json.Add("live", jarray);
+
 			using (StreamWriter sw = new StreamWriter(file, false, Encoding.UTF8))
 			{
 				sw.Write(json.ToString());
@@ -123,6 +142,62 @@ namespace IRCRelay.LearnDB
 				LogManager.WriteLog("[SaveLearnDB] " + key + " -> " + value, "log.txt");
 			learndbMap.Add(key, value);
 			saveConfig();
+		}
+
+
+		public void SaveLive(String key, String value)
+		{
+			if (liveMap.ContainsKey(key))
+			{
+				if (liveMap[key] == value)
+				{
+					return;
+				}
+				else
+				{
+					liveMap.Remove(key);
+				}
+			}
+			if (mainConfig.IRCLogMessages)
+				LogManager.WriteLog("[SaveLive] " + key + " -> " + value, "log.txt");
+			learndbMap.Add(key, value);
+			saveConfig();
+		}
+
+
+
+		public void RemoveLive(String key)
+		{
+			if (liveMap.ContainsKey(key))
+			{
+				liveMap.Remove(key);
+			}
+			if (mainConfig.IRCLogMessages)
+				LogManager.WriteLog("[RemoveLive] " + key + " -> " + value, "log.txt");
+			saveConfig();
+		}
+
+
+		public List<String> getLivesLink()
+		{
+			List<string> list = new List<string>();
+			foreach (KeyValuePair<string, string> item in liveMap)
+			{
+				list.Add(item.Key);
+			}
+			return list;
+		}
+
+		public String getLiveState(String key)
+		{
+			if (liveMap.ContainsKey(key))
+			{
+				return liveMap[key];
+			}
+			else
+			{
+				return null;
+			}
 		}
 
 		public String getString(String key)

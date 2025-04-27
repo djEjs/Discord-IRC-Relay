@@ -193,6 +193,56 @@ namespace IRCRelay
 		}
 
 
+		public async void CheckLiveStatus()
+		{
+			try
+			{
+				List<string> channelIds = LearnDBManager.Instance.getLivesLink();
+
+				using (HttpClient client = new HttpClient())
+				{
+					foreach (var channelId in channelIds)
+					{
+						// 이미 OPEN인 경우 스킵
+						string previousState = LearnDBManager.Instance.getLiveState(channelId);
+						if (previousState == "OPEN")
+							continue;
+
+						string url = $"https://api.chzzk.naver.com/polling/v1/channels/{channelId}/live-status";
+						HttpResponseMessage response = await client.GetAsync(url);
+						response.EnsureSuccessStatusCode();
+
+
+						string responseBody = await response.Content.ReadAsStringAsync();
+						JObject root = JObject.Parse(responseBody);
+
+						string status = root["content"]?["status"]?.ToString();
+						string liveTitle = root["content"]?["liveTitle"]?.ToString();
+
+						if (status == "OPEN")
+						{
+							string info = $"방송 시작: {liveTitle} (https://chzzk.naver.com/{channelId})";
+							session.SendMessage(Session.TargetBot.Discord, info);
+							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+
+							LearnDBManager.Instance.SaveLive(channelId, "OPEN");
+						}
+						else
+						{
+							LearnDBManager.Instance.SaveLive(channelId, "CLOSE");
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				if (config.IRCLogMessages == true)
+				{
+					LogManager.WriteLog(MsgSendType.DiscordToIRC, "CheckLiveStatus", "->[Exception caught]" + ex.Message, "log.txt");
+				}
+			}
+		}
+
 		public async void CallMessageAsync(String time_, String users)
 		{
 			if(users.Length > 0)
@@ -785,6 +835,42 @@ namespace IRCRelay
 					else
 					{
 						var info = "~추가 명령어 사용법 예시: **~추가 기억단어 추가할말**";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+					}
+				}
+
+				if (msg_split[0] == "~방송")
+				{
+					if (msg_split.Length > 1)
+					{
+						LearnDBManager.Instance.SaveLive(msg_split[1], "CLOSE");
+
+						var saveString = "\"" + msg_split[1] + "\" 방송 알람을 추가했습니다.";
+						session.SendMessage(Session.TargetBot.Discord, saveString);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
+					}
+					else
+					{
+						var info = "~방송 명령어 사용법 예시: **~방송 9942ff3cbf163c68e5eab624cb3acb73**";
+						session.SendMessage(Session.TargetBot.Discord, info);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+					}
+				}
+
+				if (msg_split[0] == "~방송삭제")
+				{
+					if (msg_split.Length > 1)
+					{
+						LearnDBManager.Instance.RemoveLive(msg_split[1]);
+
+						var saveString = "\"" + msg_split[1] + "\" 방송 알람을 삭제했습니다.";
+						session.SendMessage(Session.TargetBot.Discord, saveString);
+						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
+					}
+					else
+					{
+						var info = "~방송삭제 명령어 사용법 예시: **~방송삭제 9942ff3cbf163c68e5eab624cb3acb73**";
 						session.SendMessage(Session.TargetBot.Discord, info);
 						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
 					}

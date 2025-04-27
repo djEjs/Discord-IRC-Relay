@@ -48,8 +48,13 @@ namespace IRCRelay
 			timer = new Timer(TimerCallback, null, 0, 60000);
 		}
 
+
 		private void TimerCallback(object state)
 		{
+			//라이브 처리
+			Discord.CheckLiveStatus();
+
+
 			bool sanyung = false, onTime = false;
 			string onTimestr = CallManager.Instance?.checkAbleForOntime() ?? ""; // null-safe
 			if (CallManager.Instance?.checkAble() == true)
