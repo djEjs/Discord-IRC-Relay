@@ -226,7 +226,7 @@ namespace IRCRelay
 
 								LearnDBManager.Instance.SaveLive(channelId, "OPEN");
 							}
-							else
+							else if(status == "CLOSE")
 							{
 								// 방송이 CLOSE로 바뀌었을 때 방송 종료 알림 추가하고 싶으면 여기서 info 보내면 돼
 								if (previousState == "OPEN" && status == "CLOSE")
