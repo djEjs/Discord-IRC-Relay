@@ -218,7 +218,7 @@ namespace IRCRelay
 							string status = root["content"]?["status"]?.ToString();
 							string liveTitle = root["content"]?["liveTitle"]?.ToString();
 
-							if (status == "OPEN")
+							if (previousState != "OPEN" && status == "OPEN")
 							{
 								string info = $"방송 시작데스와: {liveTitle} (https://chzzk.naver.com/{channelId})";
 								session.SendMessage(Session.TargetBot.Discord, info);
