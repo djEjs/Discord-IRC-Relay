@@ -45,7 +45,7 @@ namespace IRCRelay
 		{
 			this.config = config;
 			alive = true;
-			//timer = new Timer(TimerCallback, null, 60000, 60000);
+			timer = new Timer(TimerCallback, null, 60000, 60000);
 		}
 
 
@@ -58,7 +58,7 @@ namespace IRCRelay
 			}
 
 
-			bool sanyung = false, onTime = false;
+			/*bool sanyung = false, onTime = false;
 			string onTimestr = CallManager.Instance?.checkAbleForOntime() ?? ""; // null-safe
 			if (CallManager.Instance?.checkAble() == true)
 			{
@@ -72,7 +72,7 @@ namespace IRCRelay
 			{
 				string calls = sanyung ? CallManager.Instance?.GetCalls() ?? "" : "";
 				Discord.CallMessageAsync(onTimestr, calls);
-			}
+			}*/
 		}
 
 
