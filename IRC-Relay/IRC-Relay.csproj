@@ -347,6 +347,7 @@
     <Compile Include="Commands\Handlers\EmojiCommands.cs" />
     <Compile Include="Commands\Handlers\EmbedCommands.cs" />
     <Compile Include="Commands\Handlers\UtilityCommands.cs" />
+    <Compile Include="ConversationHistory.cs" />
     <Compile Include="Discord.cs" />
     <Compile Include="EmbedManager.cs" />
     <Compile Include="EmojiManager.cs" />

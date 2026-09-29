@@ -179,6 +179,19 @@ namespace IRCRelay.Emoji
 			saveConfig();
 		}
 
+		/// <summary>
+		/// Registers a ":name:" -> "&lt;:name:id&gt;" mapping in memory (no count change, no save),
+		/// so ReplaceStringWithEmoji can render guild emojis the bot hasn't organically seen yet.
+		/// </summary>
+		public void RegisterEmoji(String simpleString, String emojiString)
+		{
+			if (string.IsNullOrEmpty(simpleString) || string.IsNullOrEmpty(emojiString))
+				return;
+			if (emojiMap.TryGetValue(simpleString, out string existing) && existing == emojiString)
+				return;
+			emojiMap[simpleString] = emojiString;
+		}
+
 		public String ReplaceEmoji(String simpleString)
 		{
 			if (emojiMap.ContainsKey(simpleString))
@@ -201,6 +214,43 @@ namespace IRCRelay.Emoji
 					emojiCountMap.Add(emojiMap[simpleString], -999);
 				}
 			}
+		}
+
+		/// <summary>
+		/// Returns up to <paramref name="size"/> known custom-emoji names in ":name:" form,
+		/// most-used first (falling back to any remaining known emojis). These are the emojis
+		/// the channel actually uses, so handing them to the AI stays relevant and token-bounded.
+		/// </summary>
+		public List<string> GetTopEmojiNames(int size)
+		{
+			var result = new List<string>();
+			if (size <= 0)
+				return result;
+
+			// emojiMap: ":name:" -> "<:name:id>"  ;  emojiCountMap: "<:name:id>" -> count
+			var valueToKey = new Dictionary<string, string>();
+			foreach (var kv in emojiMap)
+				valueToKey[kv.Value] = kv.Key;
+
+			foreach (var e in emojiCountMap.OrderByDescending(x => x.Value))
+			{
+				if (e.Value < 0) // removed / blacklisted
+					continue;
+				if (valueToKey.TryGetValue(e.Key, out string simple) && !result.Contains(simple))
+					result.Add(simple);
+				if (result.Count >= size)
+					return result;
+			}
+
+			// Fill remaining slots with any other known emojis.
+			foreach (var kv in emojiMap)
+			{
+				if (!result.Contains(kv.Key))
+					result.Add(kv.Key);
+				if (result.Count >= size)
+					break;
+			}
+			return result;
 		}
 
 		public string printStatistics(int size)

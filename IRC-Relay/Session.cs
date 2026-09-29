@@ -50,12 +50,16 @@ namespace IRCRelay
 		/// <summary>Shared command dispatcher used by both the Discord and IRC message handlers.</summary>
 		public CommandDispatcher Dispatcher { get; }
 
+		/// <summary>Rolling recent-message buffer shared by both platforms, for AI context.</summary>
+		public ConversationHistory History { get; }
+
 		public Session(dynamic config)
 		{
 			this.config = config;
 			alive = true;
 			this.Ai = new AiService(config);
 			this.Dispatcher = CommandRegistry.Build();
+			this.History = new ConversationHistory();
 			timer = new Timer(TimerCallback, null, 60000, 60000);
 		}
 

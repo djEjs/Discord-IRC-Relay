@@ -342,6 +342,54 @@ namespace IRCRelay
 			return value.Substring(0, max - 1) + "…";
 		}
 
+		/// <summary>
+		/// Returns up to <paramref name="max"/> custom-emoji names (":name:" form) from the
+		/// configured guild(s), frequently-used ones first (per EmojiManager), then the rest.
+		/// Used to auto-inject the channel's real emojis into the AI prompt without a hard-coded list.
+		/// </summary>
+		public List<string> GetGuildEmojiNames(int max)
+		{
+			var result = new List<string>();
+			if (max <= 0 || client == null)
+				return result;
+
+			string target = (((string)config.DiscordGuildName) ?? "").ToLower();
+
+			var guildNames = new List<string>();
+			foreach (var guild in client.Guilds)
+			{
+				if (target.Length > 0 && !guild.Name.ToLower().Contains(target))
+					continue;
+				foreach (var emote in guild.Emotes)
+				{
+					string n = ":" + emote.Name + ":";
+					// Ensure ReplaceStringWithEmoji can render this emoji even if never seen before.
+					EmojiManager.Instance.RegisterEmoji(n, emote.ToString());
+					if (!guildNames.Contains(n))
+						guildNames.Add(n);
+				}
+			}
+			if (guildNames.Count == 0)
+				return result;
+
+			// Prefer emojis the channel actually uses (ranked by EmojiManager), then fill.
+			foreach (var n in EmojiManager.Instance.GetTopEmojiNames(guildNames.Count))
+			{
+				if (guildNames.Contains(n) && !result.Contains(n))
+					result.Add(n);
+				if (result.Count >= max)
+					return result;
+			}
+			foreach (var n in guildNames)
+			{
+				if (!result.Contains(n))
+					result.Add(n);
+				if (result.Count >= max)
+					break;
+			}
+			return result;
+		}
+
 		public async Task OnDiscordMessage(SocketMessage messageParam)
 		{
 			string username = "";
@@ -394,6 +442,10 @@ namespace IRCRelay
 					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, formatted.Replace("$", ""));
 					return;
 				}
+
+				// Record non-command chat so the AI ("~봇") has a little recent context.
+				if (!formatted.StartsWith("~") && !formatted.StartsWith("$"))
+					session.History.Add(username, formatted);
 
 				// Post a rich embed for registered link prefixes (skip command messages).
 				if (!formatted.StartsWith("~"))

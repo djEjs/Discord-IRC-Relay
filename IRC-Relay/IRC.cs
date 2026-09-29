@@ -274,6 +274,10 @@ namespace IRCRelay
 				if (ctx.Stop)
 					return;
 
+				// Record non-command chat so the AI ("~봇") has a little recent context.
+				if (!msg.StartsWith("~") && !msg.StartsWith("$"))
+					session.History.Add(username, msg);
+
 				var Guild = session.Discord.Client.Guilds;
 				foreach (var guild in Guild)
 				{

@@ -82,7 +82,8 @@ namespace IRCRelay.Services
 		/// (which is expected to relay the text to both Discord and IRC, mirroring the
 		/// original behavior). Returns the concatenated (emoji-substituted) response text.
 		/// </summary>
-		public async Task<string> ChatAsync(string userName, string userMessage, Action<string> broadcast)
+		public async Task<string> ChatAsync(string userName, string userMessage, Action<string> broadcast,
+			IReadOnlyList<string> availableEmojis = null, IReadOnlyList<string> recentMessages = null)
 		{
 			if (!Available)
 			{
@@ -101,6 +102,21 @@ namespace IRCRelay.Services
 						messagesList.Add(ChatMessage.FromSystem(str));
 						Console.WriteLine("content : " + str);
 					}
+				}
+
+				// Auto-injected Discord custom emojis (replaces hand-written emoji lists in SystemContent).
+				if (availableEmojis != null && availableEmojis.Count > 0)
+				{
+					messagesList.Add(ChatMessage.FromSystem(
+						"감정 표현에 아래 디스코드 커스텀 이모지를 이름 그대로(:이름: 형식, 대소문자 구분) 적절히 섞어 써. " +
+						"기본 유니코드 이모지는 쓰지 마. 사용 가능한 이모지: " + string.Join(" ", availableEmojis)));
+				}
+
+				// A little recent-conversation context (bounded upstream to keep tokens low).
+				if (recentMessages != null && recentMessages.Count > 0)
+				{
+					messagesList.Add(ChatMessage.FromSystem(
+						"참고용 최근 채팅 맥락이야(그대로 따라 하지 말고 흐름만 참고해):\n" + string.Join("\n", recentMessages)));
 				}
 
 				if (!string.IsNullOrEmpty(userName))
@@ -133,14 +149,27 @@ namespace IRCRelay.Services
 							throw new Exception("Choice message content is null.");
 						}
 
-						string response = EmojiManager.Instance.ReplaceStringWithEmoji(choice.Message.Content);
-						Console.WriteLine("response : " + choice.Message.Content);
+						string raw = choice.Message.Content;
+						string response = EmojiManager.Instance.ReplaceStringWithEmoji(raw);
+						Console.WriteLine("response : " + raw);
 						Console.WriteLine("after response : " + response);
 
 						broadcast(response);
-						result += response;
+						result += raw; // return raw (":name:" form) for history/continuity
 					}
 					return result;
+				}
+				else
+				{
+					// Log the real API failure reason (e.g. insufficient_quota / invalid model)
+					// instead of silently returning "에러데스와".
+					string reason = completionResult.Error != null
+						? ("code=" + completionResult.Error.Code + ", type=" + completionResult.Error.Type + ", message=" + completionResult.Error.Message)
+						: "unknown (Successful=false, no Error object)";
+
+					Console.WriteLine("[AiService] chat request failed: " + reason);
+					if (config.IRCLogMessages == true)
+						LogManager.WriteLog(MsgSendType.DiscordToIRC, userName ?? "", "->[AI request failed] " + reason, "log.txt");
 				}
 			}
 			catch (Exception ex)
