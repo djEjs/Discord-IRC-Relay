@@ -184,8 +184,10 @@ namespace IRCRelay
 							string responseBody = await response.Content.ReadAsStringAsync();
 							JObject root = JObject.Parse(responseBody);
 
-							string status = root["content"]?["status"]?.ToString();
-							string liveTitle = root["content"]?["liveTitle"]?.ToString();
+							// SelectToken safely returns null (instead of throwing "Cannot access
+							// child value on JValue") when "content" comes back as null / a non-object.
+							string status = root.SelectToken("content.status")?.ToString();
+							string liveTitle = root.SelectToken("content.liveTitle")?.ToString();
 
 							if (previousState != "OPEN" && status == "OPEN")
 							{
