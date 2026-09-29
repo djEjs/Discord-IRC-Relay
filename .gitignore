@@ -301,3 +301,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Local runtime config (contains secrets: Discord bot token, API keys)
+IRC-Relay/settings.json

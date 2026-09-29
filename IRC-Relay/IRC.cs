@@ -230,7 +230,7 @@ namespace IRCRelay
 					LogManager.WriteLog(MsgSendType.IRCToDiscord, username, msg + "->[Exception caught]" + exception.ToString(), "log.txt");
 			}
 		}
-		private void OnChannelMessage(object sender, IrcEventArgs e)
+		private async void OnChannelMessage(object sender, IrcEventArgs e)
 		{
 			string username = "";
 			string msg = "";
@@ -266,117 +266,13 @@ namespace IRCRelay
 				}
 				msg = EmojiToName(msg);
 
-				string[] msg_split = msg.Split(' ');
-
-				if (msg_split[0] == "~저장")
-				{
-					if (msg_split.Length > 2)
-					{
-						var str = "";
-						for (int i = 2; i < msg_split.Length; i++)
-							str += msg_split[i] + ' ';
-
-						LearnDBManager.Instance.SaveString(msg_split[1], str);
-						var saveString = "\"" + msg_split[1] + "\" 저장했습니다.";
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
-						session.SendMessage(Session.TargetBot.Discord, saveString);
-					}
-					else
-					{
-						var info = "~저장 명령어 사용법 예시: **~저장 기억단어 기억할말**";
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-						session.SendMessage(Session.TargetBot.Discord, info);
-					}
-				}
-				if (msg_split[0] == "~알려")
-				{
-					if (msg_split.Length == 2)
-					{
-						string value = LearnDBManager.Instance.getString(msg_split[1]);
-
-						if (value == null)
-						{
-							var saveString = "\"" + msg_split[1] + "\" 존재하지 않는 단어입니다.";
-							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
-							session.SendMessage(Session.TargetBot.Discord, saveString);
-						}
-						else
-						{
-							var saveString = msg_split[1] + " : " + value;
-							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
-							session.SendMessage(Session.TargetBot.Discord, saveString);
-
-						}
-					}
-					else
-					{
-						var info = "~알려 명령어 사용법 예시: **~알려 조이**";
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-						session.SendMessage(Session.TargetBot.Discord, info);
-					}
-				}
-
-				if (msg_split[0] == "~로그")
-				{
-					string sourcePath = AppDomain.CurrentDomain.BaseDirectory + @"\log.txt";
-					string targetPath = @"C:\AutoSet10\public_html\log\log.txt"; //임시로 상수로 박아봄
-					System.IO.File.Copy(sourcePath, targetPath, true);
-					session.SendMessage(Session.TargetBot.IRC, "http://joy1999.codns.com:8999/log/log.txt");
-				}
-				if (msg_split[0] == "!닉")
-				{
+				// Command handling is delegated to the shared CommandDispatcher (see Commands/).
+				// This is what restores "~봇" on IRC: the same dispatcher runs for both platforms.
+				var ctx = new IRCRelay.Commands.CommandContext(session, config, IRCRelay.Commands.CommandSource.IRC,
+					username, username, msg, session.Ai);
+				await session.Dispatcher.DispatchAsync(ctx);
+				if (ctx.Stop)
 					return;
-				}
-				if (msg_split[0] == "~디코")
-				{
-					string userList = "";
-
-					var Guilds = session.Discord.Client.Guilds;
-					foreach (var guild in Guilds)
-					{
-						var users = guild.Users;
-						foreach (var user in users)
-						{
-							if (msg_split.Length > 1)
-							{
-								if (msg_split[1] == "all")
-								{
-									userList += "@" + user.Username + ", ";
-								}
-								else
-								{
-									if (user.Status != UserStatus.Offline)
-									{
-										userList += "@" + user.Username + ", ";
-									}
-								}
-							}
-							else
-							{
-								if (user.Status != UserStatus.Offline)
-								{
-									userList += "@" + user.Username + ", ";
-								}
-							}
-						}
-					}
-					ircClient.SendMessage(SendType.Message, config.IRCChannel, userList);
-				}
-
-				if (msg_split[0] == "~골라")
-				{
-					if (msg_split.Length > 2)
-					{
-						string choose = msg_split[random.Next(1, msg_split.Length)];
-
-						session.SendMessage(Session.TargetBot.IRC, choose);
-						session.SendMessage(Session.TargetBot.Discord, choose);
-					}
-					else
-					{
-						session.SendMessage(Session.TargetBot.IRC, "[!골라] 명령어는 띄어쓰기로 구분해주세요");
-					}
-				}
 
 				var Guild = session.Discord.Client.Guilds;
 				foreach (var guild in Guild)

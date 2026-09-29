@@ -20,6 +20,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 
+using IRCRelay.Commands;
+using IRCRelay.Services;
+
 namespace IRCRelay
 {
 	public class Session
@@ -41,10 +44,18 @@ namespace IRCRelay
 		public IRC Irc { get => irc; }
 		internal Discord Discord { get => discord; }
 
+		/// <summary>Shared AI provider used by the "~봇" command on both platforms.</summary>
+		public AiService Ai { get; }
+
+		/// <summary>Shared command dispatcher used by both the Discord and IRC message handlers.</summary>
+		public CommandDispatcher Dispatcher { get; }
+
 		public Session(dynamic config)
 		{
 			this.config = config;
 			alive = true;
+			this.Ai = new AiService(config);
+			this.Dispatcher = CommandRegistry.Build();
 			timer = new Timer(TimerCallback, null, 60000, 60000);
 		}
 

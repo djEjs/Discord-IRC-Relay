@@ -24,15 +24,12 @@ using Discord;
 using Discord.Commands;
 using Discord.Net.Providers.WS4Net;
 using Discord.WebSocket;
-using OpenAI;
-using OpenAI.Managers;
-using OpenAI.ObjectModels;
-using OpenAI.ObjectModels.RequestModels;
 
 using IRCRelay.Logs;
-using IRCRelay.LearnAI;
 using IRCRelay.Emoji;
 using IRCRelay.LearnDB;
+using IRCRelay.Commands;
+using IRCRelay.Embeds;
 using System.Net;
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
@@ -44,7 +41,6 @@ using Meebey.SmartIrc4net;
 
 using System.Web;
 using System.IO;
-using Nito.AsyncEx;
 
 namespace IRCRelay
 {
@@ -57,8 +53,9 @@ namespace IRCRelay
 		private IServiceProvider services;
 		private dynamic config;
 		private Random random;
-		private OpenAIService openAiService;
-		private bool alarmCall = true;
+
+		/// <summary>Hourly-alarm flag toggled by the "~정각알람" command.</summary>
+		public bool AlarmCall { get; set; } = true;
 
 		public DiscordSocketClient Client { get => client; }
 
@@ -89,19 +86,6 @@ namespace IRCRelay
 			//client.ReactionAdded += OnDiscordReactionAdded;
 
 			random = new Random();
-
-			try
-			{
-				openAiService = new OpenAIService(new OpenAiOptions()
-				{
-					ApiKey = config.AIApiKey,
-					DefaultModelId = Models.Gpt_4o
-				});
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine("Exception:" + ex.Message);
-			}
 		}
 
 		private async Task OnDiscordReactionAdded(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
@@ -178,21 +162,6 @@ namespace IRCRelay
 			}
 		}
 
-		static public string TestWebm(String webm)
-		{
-			Uri uri = new Uri(webm);
-			string file = Path.GetFileName(uri.AbsolutePath);
-			using (var client = new WebClient())
-			{
-				client.DownloadFile(webm, "C:\\AutoSet10\\public_html\\img\\" + file);
-			}
-			string new_path = "C:\\AutoSet10\\public_html\\img\\" + file.Replace(".webm", ".mp4");
-			AsyncContext.Run(async () => await Xabe.FFmpeg.FFmpeg.Conversions.FromSnippet.ToMp4("C:\\AutoSet10\\public_html\\img\\" + file, new_path)).Start();
-
-			return new_path;
-		}
-
-
 		public async Task CheckLiveStatus()
 		{
 			try
@@ -259,105 +228,116 @@ namespace IRCRelay
 
 		public async void CallMessageAsync(String time_, String users)
 		{
-			if(users.Length > 0)
+			Action<string> broadcast = text =>
+			{
+				session.SendMessage(Session.TargetBot.Discord, text);
+				session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, text);
+			};
+
+			if (users.Length > 0)
 			{
 				var str = "지금이 " + time_ + "시라는걸 알리면서 지금이 상영회 시간이라고 말해줘.";
-				var info = users;
-				await CreateOpenAIChat("", str);
-				session.SendMessage(Session.TargetBot.Discord, info);
-				session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
+				await session.Ai.ChatAsync("", str, broadcast);
+				broadcast(users);
 			}
-			else if(alarmCall)
+			else if (AlarmCall)
 			{
 				var str = "지금이 " + time_ + "시라는걸 알리면서 지금이 ○○ 시간이라고 말해줘. ○○은 현재 시간에 할수있는 할거리로 창의적으로 바꿔줘.";
-				await CreateOpenAIChat("", str);
+				await session.Ai.ChatAsync("", str, broadcast);
 			}
 		}
 
-		public async Task<string> CreateOpenAIChat(string userName, string userMessage)
+		/// <summary>
+		/// If the message contains a link whose start matches a registered prefix
+		/// (~임베딩추가), fetch the page's Open Graph metadata and post a Discord embed.
+		/// This is a fallback for links Discord doesn't auto-unfurl (e.g. dogdrip).
+		/// </summary>
+		private async Task TryPostLinkEmbed(SocketMessage messageParam, string content)
 		{
 			try
 			{
-				List<ChatMessage> messagesList = new List<ChatMessage>();
-				foreach (string str in config.SystemContent)
-				{
-					messagesList.Add(ChatMessage.FromSystem(str));
-					Console.WriteLine("content : " + str);
-				}
+				if (string.IsNullOrEmpty(content))
+					return;
 
-				if(userName != null && userName.Length > 0)
-				{
-					messagesList.Add(ChatMessage.FromSystem("지금 너랑 대화하는 사람의 이름은 " + userName + " 이야."));
-				}
+				Match urlMatch = Regex.Match(content, @"https?://[^\s<>()\[\]]+");
+				if (!urlMatch.Success)
+					return;
 
-				List<string> userContent = LearnAIManager.Instance.searchAllString();
-				foreach (string str in userContent)
-				{
-					messagesList.Add(ChatMessage.FromSystem(str));
-					Console.WriteLine("user content : " + str);
-				}
+				string url = urlMatch.Value.TrimEnd('.', ',', ')', ']', '>', '!', '?', '"', '\'');
+				if (EmbedManager.Instance.Match(url) == null)
+					return;
 
-				messagesList.Add(ChatMessage.FromUser(userMessage));
-
-
-
-				var completionResult = await openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
-				{
-					Messages = messagesList,
-					Model = Models.Gpt_4o
-				});
-
-				if (completionResult.Successful)
-				{
-					string str = "";
-
-
-
-
-					foreach (var choice in completionResult.Choices)
-					{
-						if (choice.Message == null)
-						{
-							throw new Exception("Choice message is null.");
-						}
-
-						if (choice.Message?.Content == null)
-						{
-							throw new Exception("Choice message content is null.");
-						}
-
-						string response = choice.Message.Content;
-
-						Console.WriteLine("response : " + response);
-						Console.WriteLine("after response : " + EmojiManager.Instance.ReplaceStringWithEmoji(response));
-
-						session.SendMessage(Session.TargetBot.Discord, EmojiManager.Instance.ReplaceStringWithEmoji(response));
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, EmojiManager.Instance.ReplaceStringWithEmoji(response));
-						str += EmojiManager.Instance.ReplaceStringWithEmoji(response);
-					}
-					return str;
-				}
+				Embed embed = await BuildOpenGraphEmbed(url);
+				if (embed != null)
+					await messageParam.Channel.SendMessageAsync(embed: embed);
 			}
 			catch (Exception ex)
 			{
-				var errorDetails = $"->[Exception caught]\n" +
-								   $"Message: {ex.Message}\n" +
-								   $"StackTrace: {ex.StackTrace}\n" +
-								   $"InnerException: {ex.InnerException?.Message ?? "None"}\n" +
-								   $"Source: {ex.Source}\n" +
-								   $"TargetSite: {ex.TargetSite}";
-
-				Console.WriteLine("Message" + errorDetails);
-
 				if (config.IRCLogMessages == true)
-				{
-					LogManager.WriteLog(MsgSendType.DiscordToIRC, userName, "->[Exception caught]" + ex.Message, "log.txt");
-				}
+					LogManager.WriteLog(MsgSendType.DiscordToIRC, "TryPostLinkEmbed", "->[Exception caught]" + ex.Message, "log.txt");
+			}
+		}
+
+		private async Task<Embed> BuildOpenGraphEmbed(string url)
+		{
+			string html;
+			using (HttpClient http = new HttpClient())
+			{
+				http.Timeout = TimeSpan.FromSeconds(10);
+				http.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; SimBibotEmbed/1.0)");
+				HttpResponseMessage response = await http.GetAsync(url);
+				if (!response.IsSuccessStatusCode)
+					return null;
+				html = await response.Content.ReadAsStringAsync();
 			}
 
-			session?.SendMessage(Session.TargetBot.Discord, "에러데스와");
-			session?.Irc?.Client?.SendMessage(SendType.Message, config.IRCChannel, "에러데스와");
-			return "에러데스와";
+			string title = GetMetaContent(html, "og:title") ?? GetHtmlTitle(html);
+			string description = GetMetaContent(html, "og:description");
+			string image = GetMetaContent(html, "og:image");
+			string siteName = GetMetaContent(html, "og:site_name");
+
+			if (string.IsNullOrEmpty(title) && string.IsNullOrEmpty(description) && string.IsNullOrEmpty(image))
+				return null;
+
+			var builder = new EmbedBuilder().WithUrl(url).WithColor(new Color(43, 45, 49));
+			if (!string.IsNullOrEmpty(siteName))
+				builder.WithAuthor(Truncate(siteName, 256));
+			if (!string.IsNullOrEmpty(title))
+				builder.WithTitle(Truncate(title, 256));
+			if (!string.IsNullOrEmpty(description))
+				builder.WithDescription(Truncate(description, 400));
+			if (!string.IsNullOrEmpty(image) && (image.StartsWith("http://") || image.StartsWith("https://")))
+				builder.WithImageUrl(image);
+
+			return builder.Build();
+		}
+
+		private static string GetMetaContent(string html, string property)
+		{
+			string esc = Regex.Escape(property);
+			// property/name attribute before content
+			Match m = Regex.Match(html,
+				"<meta[^>]+(?:property|name)=[\"']" + esc + "[\"'][^>]+content=[\"']([^\"']*)[\"']",
+				RegexOptions.IgnoreCase);
+			if (!m.Success) // content attribute before property/name
+				m = Regex.Match(html,
+					"<meta[^>]+content=[\"']([^\"']*)[\"'][^>]+(?:property|name)=[\"']" + esc + "[\"']",
+					RegexOptions.IgnoreCase);
+
+			return m.Success ? WebUtility.HtmlDecode(m.Groups[1].Value).Trim() : null;
+		}
+
+		private static string GetHtmlTitle(string html)
+		{
+			Match m = Regex.Match(html, "<title[^>]*>([^<]*)</title>", RegexOptions.IgnoreCase);
+			return m.Success ? WebUtility.HtmlDecode(m.Groups[1].Value).Trim() : null;
+		}
+
+		private static string Truncate(string value, int max)
+		{
+			if (string.IsNullOrEmpty(value) || value.Length <= max)
+				return value;
+			return value.Substring(0, max - 1) + "…";
 		}
 
 		public async Task OnDiscordMessage(SocketMessage messageParam)
@@ -399,350 +379,12 @@ namespace IRCRelay
 				formatted = ChannelMentionToName(formatted, message);
 				formatted = Unescape(formatted);
 
-				string[] msg_split = formatted.Split(' ');
-				if (msg_split[0] == "~gif")
-				{
-					if (msg_split.Length > 1)
-					{
-						String path = toGif(username, msg_split[1]);
-						if (path != null)
-						{
-							session.SendFile(Session.TargetBot.Discord, path);
-							await messageParam.DeleteAsync();
-							return;
-						}
-					}
-					else
-					{
-						bool hasUploadFile = false;
-						foreach (var attach in message.Attachments)
-						{
-							if (!attach.Filename.EndsWith(".webp"))
-							{
-								String path = toGif(username, attach.Url);
-								if (path != null)
-								{
-									session.SendFile(Session.TargetBot.Discord, path);
-									hasUploadFile = true;
-								}
-							}
-						}
-						if(!hasUploadFile)
-						{
-							var info = "사용법: ~gif \"gif변환파일주소\" 혹은 업로드시 ~gif 붙이고 업로드";
-							session.SendMessage(Session.TargetBot.Discord, info);
-							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-						}
-						else
-						{
-							await messageParam.DeleteAsync();
-							return;
-						}
-					}
-				}
-
-
-				if (msg_split[0] == "~아피")
-				{
-					string sourcePath = AppDomain.CurrentDomain.BaseDirectory + @"\log.txt";
-					string targetPath = @"C:\AutoSet10\public_html\log\log.txt"; //임시로 상수로 박아봄
-					System.IO.File.Copy(sourcePath, targetPath, true);
-					session.SendMessage(Session.TargetBot.Discord, "https://ip.pe.kr/");
-				}
-				if (msg_split[0] == "~예외")
-				{
-					throw new Exception("테스트용 예외");
-				}
-				if (msg_split[0] == "~로그")
-				{
-					string sourcePath = AppDomain.CurrentDomain.BaseDirectory + @"\log.txt";
-					string targetPath = @"C:\AutoSet10\public_html\log\log.txt"; //임시로 상수로 박아봄
-					System.IO.File.Copy(sourcePath, targetPath, true);
-					session.SendMessage(Session.TargetBot.Discord, "http://joy1999.codns.com:8999/log/log.txt");
-				}
-
-				// 추가중
-				if (msg_split[0] == "~콘")
-				{
-					string DCCON_HOME_URL = "https://dccon.dcinside.com/";
-					string DCCON_SEARCH_URL = "https://dccon.dcinside.com/hot/1/title/";
-					string DCCON_DETAILS_URL = "https://dccon.dcinside.com/index/package_detail";
-
-
-					var len = msg_split.Length;
-					if (len == 1)
-					{
-						var info = "~콘 명령어 사용 : **~콘 간단 꼬우신** or **~콘 간단 우중콘 09 꼬우신**";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL);
-						return;
-					}
-					if (len == 2)
-					{
-						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + msg_split[1]);
-						return;
-					}
-					// 검색어 : msg_split[1] ~ [len - 2]
-					// 인덱스 : msg_split[len - 1]
-					else if (len == 3)
-					{
-						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + msg_split[1]);
-						return;
-					}
-					else if (len > 3)
-					{
-						var str = "";
-
-						for (int i = 1; i < len - 1; i++)
-							str += msg_split[i] + ' ';
-
-						str = str.TrimEnd().Replace(" ", "%20");
-
-						session.SendMessage(Session.TargetBot.Discord, DCCON_SEARCH_URL + str);
-					}
-				}
-				if (msg_split[0] == "~이모지숙청")
-				{
-					// 숙청할단어 : msg_split[1]
-					EmojiManager.Instance.RemoveEmoji(msg_split[1]);
-				}
-				if (msg_split[0] == "~이모지")
-				{
-					int size = 5;
-					if (msg_split.Length >= 2)
-					{
-						size = Int32.Parse(msg_split[1]);
-					}
-					if(size >= 50) {
-						size = 50;
-					}
-					var str = EmojiManager.Instance.printStatistics(size);
-					session.SendMessage(Session.TargetBot.Discord, str);
-				}
-				if (msg_split[0] == "~이모지초기화")
-				{
-					EmojiManager.Instance.InitEmojiCount();
-					var info = "이모지 카운트를 초기화 했습니다.";
-					session.SendMessage(Session.TargetBot.Discord, info);
-					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-				}
-
-				if (msg_split[0] == "~저장")
-				{
-					if (msg_split.Length > 2)
-					{
-						var str = "";
-						for (int i = 2; i < msg_split.Length; i++)
-							str += (msg_split.Length == i + 1) ? msg_split[i] : msg_split[i] + ' ';
-
-						LearnDBManager.Instance.SaveString(msg_split[1], str);
-						var saveString = "\"" + msg_split[1] + "\" 저장했습니다.";
-						session.SendMessage(Session.TargetBot.Discord, saveString);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
-					}
-					else
-					{
-						var info = "~저장 명령어 사용법 예시: **~저장 기억단어 기억할말**";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-				}
-
-
-				if (msg_split[0] == "~조련" || msg_split[0] == "~학습")
-				{
-					if (msg_split.Length >= 2)
-					{
-						var str = "";
-						for (int i = 1; i < msg_split.Length; i++)
-							str += (msg_split.Length == i + 1) ? msg_split[i] : msg_split[i] + ' ';
-
-						if(str.Length > 100)
-						{
-							var saveString = "학습최대치 인당 100글자가 넘었습니다. 현재 " + str.Length + " 글자";
-
-							session.SendMessage(Session.TargetBot.Discord, saveString);
-							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
-						}
-						else
-						{
-							String past = LearnAIManager.Instance.getString(username);
-
-							if (past != null && past.Length > 0)
-							{
-								var saveString = "봇에 새로운 학습 정보를 저장했습니다. 과거 학습 : " + past + "";
-
-								session.SendMessage(Session.TargetBot.Discord, saveString);
-								session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
-							}
-							else
-							{
-								var saveString = "봇에 새로운 학습 정보를 저장했습니다.";
-
-								session.SendMessage(Session.TargetBot.Discord, saveString);
-								session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
-							}
-							LearnAIManager.Instance.SaveString(username, str);
-						}
-					}
-					else
-					{
-						String past = LearnAIManager.Instance.getString(username);
-						var info = "현재 학습 : " + past;
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-				}
-				if (msg_split[0] == "~조련목록" || msg_split[0] == "~학습목록")
-				{
-					var info = "현재 학습목록 \n ```";
-					List<KeyValuePair<string, string>> userContent = LearnAIManager.Instance.searchAllStringPair();
-					bool first_ = true;
-					foreach (KeyValuePair<string, string> str in userContent)
-					{
-						if(!first_)
-							info += "\n";
-						info += str.Key + ": " + str.Value;
-						first_ = false;
-					}
-					info += "```";
-					session.SendMessage(Session.TargetBot.Discord, info);
-				}
-
-				if (msg_split[0] == "~심심빙봇" || msg_split[0] == "~봇")
-				{
-					if (msg_split.Length >= 2)
-					{
-						var str = "";
-						for (int i = 1; i < msg_split.Length; i++)
-							str += (msg_split.Length == i + 1) ? msg_split[i] : msg_split[i] + ' ';
-
-						await CreateOpenAIChat(username, str);
-					}
-					else
-					{
-						var info = "~심심빙봇 명령어 사용법 예시: **~봇 죽어**";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-				}
-				if (msg_split[0] == "~알려")
-				{
-					if (msg_split.Length == 2)
-					{
-						string value = LearnDBManager.Instance.getString(msg_split[1]);
-
-						if(value == null)
-						{
-							var saveString = "\"" + msg_split[1] + "\" 존재하지 않는 단어입니다.";
-							session.SendMessage(Session.TargetBot.Discord, saveString);
-							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
-						} else
-						{
-							var saveString = msg_split[1] + " : " + value;
-							session.SendMessage(Session.TargetBot.Discord, saveString);
-							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
-
-						}
-					}
-					else
-					{
-						var info = "~알려 명령어 사용법 예시: **~알려 조이**";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-				}
-
-				if (msg_split[0] == "~찾아")
-				{
-					if (msg_split.Length == 2 || msg_split.Length == 3)
-					{
-						List<string> list = LearnDBManager.Instance.searchString(msg_split[1]);
-						int check_num = 1;
-						if(msg_split.Length == 3)
-						{
-							check_num = Int32.Parse(msg_split[2]);
-							if (check_num <= 0)
-								check_num = 1;
-						}
-						int skip = (check_num-1)*10;
-						if (list.Count > 0 && list.Count > skip)
-						{
-							string str = "";
-							int max = 10;
-							int item_size = list.Count;
-							foreach (String item in list)
-							{
-								int current = 10 * check_num + 11 - max;
-								if (skip == 0)
-								{
-									str += item;
-									if (--max <= 0)
-									{
-										check_num++;
-										str += " (외 " + (list.Count - 10 * (check_num-1)) + "건. 다음찾기: **~찾아 " + msg_split[1] + " " + check_num + "**)";
-										break;
-									}
-									else if (current != item_size)
-									{
-										str += ", ";
-									}
-								}
-								else
-								{
-									skip--;
-								}
-							}
-							session.SendMessage(Session.TargetBot.Discord, str);
-							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, str);
-						}
-						else
-						{
-							string info = "";
-							info += msg_split[1];
-							info += "-> 찾지 못하였습니다.";
-							session.SendMessage(Session.TargetBot.Discord, info);
-							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-						}
-					}
-					else
-					{
-						var info = "~찾아 명령어 사용법 예시: **~찾아 뉴성군**";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-				}
-
-
-
-				if (msg_split[0] == "~아얄")
-				{
-					string nickname_list = "";
-					string requested_channel = config.IRCChannel;
-					Channel channel = session.Irc.Client.GetChannel(requested_channel);
-
-					foreach (DictionaryEntry de in channel.Users)
-					{
-						string key = (string)de.Key;
-						Meebey.SmartIrc4net.ChannelUser channeluser = (Meebey.SmartIrc4net.ChannelUser)de.Value;
-
-						if (channeluser.Nick == config.IRCNick)
-						{
-							continue;
-						}
-						if (channeluser.IsOp)
-						{
-							nickname_list += "@";
-						}
-						if (channeluser.IsVoice)
-						{
-							nickname_list += "+";
-						}
-						nickname_list += channeluser.Nick + ", ";
-					}
-
-					session.SendMessage(Session.TargetBot.Discord, nickname_list);
-				}
+				// Command handling is delegated to the shared CommandDispatcher (see Commands/).
+				var ctx = new IRCRelay.Commands.CommandContext(session, config, IRCRelay.Commands.CommandSource.Discord,
+					username, userid, formatted, session.Ai, this, message);
+				await session.Dispatcher.DispatchAsync(ctx);
+				if (ctx.Stop)
+					return;
 
 				if (formatted.Length > 0 && formatted[0].ToString() == "$")
 				{
@@ -751,255 +393,9 @@ namespace IRCRelay
 					return;
 				}
 
-				if (msg_split[0] == "~상영회연장")
-				{
-					if (msg_split.Length == 2)
-					{
-						CallManager.Instance.PlusDate(msg_split[1]);
-						DateTime endDate = Convert.ToDateTime(msg_split[1]);
-						endDate = new DateTime(endDate.Year, endDate.Month, endDate.Day, 23, 59, 0);
-						string info = "상영회 연장 날짜 [";
-						info += endDate.ToString();
-						info += "] ~상영회참가, ~상영회탈퇴 로 참여하세요.";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-					else
-					{
-						var info = "~상영회연장 (종료날짜) 사용법 예시: **~상영회 9/15**";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-				}
-				if (msg_split[0] == "~상영회" || msg_split[0] == "~심심빙애니" || msg_split[0] == "~심심빙상영회")
-				{
-					string info = "현재 상영회[";
-
-					info += CallManager.Instance.getId();
-					info += "] ";
-
-					DateTime startDate = CallManager.Instance.getStartDate();
-					DateTime endDate = CallManager.Instance.getEndDate();
-					startDate = new DateTime(startDate.Year, startDate.Month, startDate.Day, 0, 1, 0);
-					endDate = new DateTime(endDate.Year, endDate.Month, endDate.Day, 23, 59, 0);
-					if (endDate.Year < 2090)
-					{
-						info += "예정일정[";
-						info += startDate.ToString("yyyy-MM-dd");
-						info += " -> ";
-						info += endDate.ToString("yyyy-MM-dd");
-						info += "] ";
-					} else
-					{
-						info += "시작일정[";
-						info += startDate.ToString("yyyy-MM-dd");
-						info += "] ";
-					}
-					session.SendMessage(Session.TargetBot.Discord, info);
-					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					KeyValuePair<string, string>? entry = LearnDBManager.Instance.GetLastAniEntry();
-					if(entry != null)
-					{
-						info = "다음 상영회[";
-						info += entry.Value.Key;
-						info += " : ";
-						info += entry.Value.Value;
-						info += "] ";
-						if (msg_split.Length > 2 && msg_split[1] == "추가")
-						{
-							msg_split[0] = "~추가";
-							msg_split[1] = entry.Value.Key;
-						}
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-				}
-
-
-				if (msg_split[0] == "~추가")
-				{
-					if (msg_split.Length > 2)
-					{
-						string value = LearnDBManager.Instance.getString(msg_split[1]);
-
-						if (value == null)
-						{
-							var str = "";
-							for (int i = 2; i < msg_split.Length; i++)
-								str += (msg_split.Length == i + 1) ? msg_split[i] : msg_split[i] + ' ';
-
-							LearnDBManager.Instance.SaveString(msg_split[1], str);
-							var saveString = "\"" + msg_split[1] + "\" 존재하지 않는 단어이므로 새로 저장했습니다.";
-							session.SendMessage(Session.TargetBot.Discord, saveString);
-							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
-						}
-						else
-						{
-							var str = value + ", ";
-							for (int i = 2; i < msg_split.Length; i++)
-								str += (msg_split.Length == i + 1) ? msg_split[i] : msg_split[i] + ' ';
-
-							LearnDBManager.Instance.SaveString(msg_split[1], str);
-							var saveString = "\"" + msg_split[1] + "\"에 덧붙여서 추가했습니다.";
-							session.SendMessage(Session.TargetBot.Discord, saveString);
-							session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
-
-						}
-					}
-					else
-					{
-						var info = "~추가 명령어 사용법 예시: **~추가 기억단어 추가할말**";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-				}
-
-				if (msg_split[0] == "~방송")
-				{
-					if (msg_split.Length > 1)
-					{
-						LearnDBManager.Instance.SaveLive(msg_split[1], "CLOSE");
-
-						var saveString = "\"" + msg_split[1] + "\" 방송 알람을 추가했습니다.";
-						session.SendMessage(Session.TargetBot.Discord, saveString);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
-					}
-					else
-					{
-						var info = "~방송 명령어 사용법 예시: **~방송 9942ff3cbf163c68e5eab624cb3acb73**";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-				}
-
-				if (msg_split[0] == "~방송삭제")
-				{
-					if (msg_split.Length > 1)
-					{
-						LearnDBManager.Instance.RemoveLive(msg_split[1]);
-
-						var saveString = "\"" + msg_split[1] + "\" 방송 알람을 삭제했습니다.";
-						session.SendMessage(Session.TargetBot.Discord, saveString);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, saveString);
-					}
-					else
-					{
-						var info = "~방송삭제 명령어 사용법 예시: **~방송삭제 9942ff3cbf163c68e5eab624cb3acb73**";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-				}
-
-				if (msg_split[0] == "~상영회시작")
-				{
-					if (msg_split.Length == 4 || msg_split.Length == 3)
-					{
-						string start_time = msg_split[2];
-						string end_time = msg_split.Length == 4 ? msg_split[3] : "2099/12/31";
-
-						CallManager.Instance.setId(msg_split[1]);
-						CallManager.Instance.AddDate(start_time, end_time);
-						DateTime startDate = Convert.ToDateTime(start_time);
-						DateTime endDate = Convert.ToDateTime(end_time);
-						startDate = new DateTime(startDate.Year, startDate.Month, startDate.Day, 0, 1, 0);
-						endDate = new DateTime(endDate.Year, endDate.Month, endDate.Day, 23, 59, 0);
-						string info = "상영회 예정 날짜 [";
-						info += startDate.ToString();
-						if(msg_split.Length == 3)
-						{
-							info += "] -> [";
-							info += endDate.ToString();
-						}
-						info += "] ~상영회참가, ~상영회탈퇴 로 참여하세요.";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-					else
-					{
-						var info = "~상영회 (시작날짜) (종료날짜) 사용법 예시: **~상영회 9/9 9/13**";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-				}
-
-
-				if (msg_split[0] == "~정각알람")
-				{
-					if (alarmCall)
-					{
-						string info = "정각 알람 기능을 껐습니다.";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-						alarmCall = false;
-					}
-					else
-					{
-						string info = "정각 알람 기능을 켰습니다.";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-						alarmCall = true;
-					}
-				}
-				if (msg_split[0] == "~상영회참가")
-				{
-					CallManager.Instance.AddMember(username, userid);
-					string info = "상영회 [";
-					info += username;
-					info += "] 참가되었습니다";
-					session.SendMessage(Session.TargetBot.Discord, info);
-					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-				}
-				if (msg_split[0] == "~상영회탈퇴" || msg_split[0] == "~상영회불참")
-				{
-					CallManager.Instance.RemoveMember(username);
-					string info = "상영회 [";
-					info += username;
-					info += "] 탈퇴되었습니다";
-					session.SendMessage(Session.TargetBot.Discord, info);
-					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-				}
-
-				if (msg_split[0] == "~상영회종료")
-				{
-					CallManager.Instance.AddDate(Convert.ToDateTime(new DateTime()).ToString(), Convert.ToDateTime(new DateTime()).ToString());
-					string info = "상영회가 종료되었습니다";
-					session.SendMessage(Session.TargetBot.Discord, info);
-					session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-				}
-
-				if (msg_split[0] == "~상영회예외")
-				{
-					if (msg_split.Length == 3)
-					{
-						CallManager.Instance.AddExclude(msg_split[1]);
-						string info = "다음 날짜엔 상영회가 없습니다. [";
-						info += Convert.ToDateTime(msg_split[1]).ToString();
-						info += "]";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-					else
-					{
-						var info = "~상영회예외 (해당날짜) 사용법 예시: **~상영회 9/10** 9월 10일은 제외함";
-						session.SendMessage(Session.TargetBot.Discord, info);
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, info);
-					}
-				}
-
-				if (msg_split[0] == "~골라")
-				{
-					if (msg_split.Length > 2)
-					{
-						string choose = msg_split[random.Next(1, msg_split.Length)];
-
-						session.Irc.Client.SendMessage(SendType.Message, config.IRCChannel, choose);
-						session.SendMessage(Session.TargetBot.Discord, choose);
-					}
-					else
-					{
-						session.SendMessage(Session.TargetBot.Discord, "[!골라] 명령어는 띄어쓰기로 구분해주세요");
-					}
-				}
+				// Post a rich embed for registered link prefixes (skip command messages).
+				if (!formatted.StartsWith("~"))
+					await TryPostLinkEmbed(messageParam, messageParam.Content);
 
 				if (Program.HasMember(config, "SpamFilter")) //bcompat for older configurations
 				{

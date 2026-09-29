@@ -17,6 +17,7 @@
 
 using System;
 using System.IO;
+using System.Collections.Generic;
 
 using System.Threading.Tasks;
 using Discord;
@@ -79,6 +80,15 @@ namespace IRCRelay
 				if (config.IRCLogMessages)
 					LogManager.WriteLog("[Exception caught]" + e.ToString(), "log.txt");
 			}
+			try
+			{
+				IRCRelay.Embeds.EmbedManager.Instance.setConfig(config);
+			}
+			catch (Exception e)
+			{
+				if (config.IRCLogMessages)
+					LogManager.WriteLog("[Exception caught]" + e.ToString(), "log.txt");
+			}
 			StartSessions(config).GetAwaiter().GetResult();
 		}
 
@@ -94,7 +104,19 @@ namespace IRCRelay
 
 		public static bool HasMember(dynamic obj, string name)
 		{
-			return obj.GetType().GetMember(name) != null;
+			if (obj == null)
+				return false;
+
+			// JsonConfig's ConfigObject implements IDictionary<string, object>,
+			// so we can check the parsed config for the key directly.
+			if (obj is IDictionary<string, object> dict)
+				return dict.ContainsKey(name);
+
+			// Fallback for plain CLR objects (properties/fields).
+			// NOTE: GetMember() returns an empty (non-null) array when the member
+			// is absent, so the previous "!= null" check was always true.
+			Type type = obj.GetType();
+			return type.GetProperty(name) != null || type.GetField(name) != null;
 		}
 	}
 }

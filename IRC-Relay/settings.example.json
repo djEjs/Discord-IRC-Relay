@@ -1,0 +1,26 @@
+{
+	"IRCServer": "irc.luatic.net",
+	"IRCPort": 6667,
+	"IRCChannel": "#심비록",
+	"IRCNick": "심심빙봇",
+	"IRCAuthUser": "",
+	"IRCLoginName": "",
+	"IRCLogMessages": true,
+	"IRCAuthString": "",
+	"DiscordBotToken": "YOUR_DISCORD_BOT_TOKEN_HERE",
+	"DiscordGuildName": "심비록",
+	"DiscordChannelName": "text_message",
+	"SpamFilter": [
+	],
+	"IRCNameBlacklist": [
+	],
+	"DiscordUserIDBlacklist": [
+	],
+	"StikkedCreateUrlAndKey": "",
+	"AIApiKey": "YOUR_OPENAI_API_KEY_HERE",
+	"AIModel": "gpt-4.1-mini",
+	"SystemContent": [
+		"너는 '심심빙봇'이라는 이름의 디스코드/IRC 채팅봇이야. 한국어로 짧고 유쾌하게 대답해.",
+		"문장 끝에 가끔 '~데스와' 같은 장난스러운 말투를 섞어서 대답해."
+	]
+}

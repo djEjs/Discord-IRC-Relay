@@ -339,7 +339,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\CommandFramework.cs" />
+    <Compile Include="Commands\CommandRegistry.cs" />
+    <Compile Include="Commands\Handlers\AiChatCommand.cs" />
+    <Compile Include="Commands\Handlers\LearnCommands.cs" />
+    <Compile Include="Commands\Handlers\ScreeningCommands.cs" />
+    <Compile Include="Commands\Handlers\EmojiCommands.cs" />
+    <Compile Include="Commands\Handlers\EmbedCommands.cs" />
+    <Compile Include="Commands\Handlers\UtilityCommands.cs" />
     <Compile Include="Discord.cs" />
+    <Compile Include="EmbedManager.cs" />
     <Compile Include="EmojiManager.cs" />
     <Compile Include="CallManager.cs" />
     <Compile Include="LearnDBManager.cs" />
@@ -348,6 +357,7 @@
     <Compile Include="LogManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\AiService.cs" />
     <Compile Include="Session.cs" />
   </ItemGroup>
   <ItemGroup>
