@@ -22,6 +22,7 @@ using Discord;
 
 using IRCRelay.Commands;
 using IRCRelay.Services;
+using IRCRelay.Digest;
 
 namespace IRCRelay
 {
@@ -53,6 +54,12 @@ namespace IRCRelay
 		/// <summary>Rolling recent-message buffer shared by both platforms, for AI context.</summary>
 		public ConversationHistory History { get; }
 
+		/// <summary>Larger rolling buffer used as the source for the periodic channel digest.</summary>
+		public ConversationHistory DigestBuffer { get; }
+
+		private int digestHours = 24;
+		private volatile bool digestRunning;
+
 		public Session(dynamic config)
 		{
 			this.config = config;
@@ -60,9 +67,22 @@ namespace IRCRelay
 			this.Ai = new AiService(config);
 			this.Dispatcher = CommandRegistry.Build();
 			this.History = new ConversationHistory();
+			this.DigestBuffer = new ConversationHistory(200, 300);
+			try
+			{
+				if (Program.HasMember(config, "AIDigestHours"))
+					digestHours = Convert.ToInt32(config.AIDigestHours);
+			}
+			catch { }
 			timer = new Timer(TimerCallback, null, 60000, 60000);
 		}
 
+		/// <summary>Records a chat line into both the short context buffer and the digest buffer.</summary>
+		public void RecordChat(string user, string text)
+		{
+			History.Add(user, text);
+			DigestBuffer.Add(user, text);
+		}
 
 		private void TimerCallback(object state)
 		{
@@ -71,6 +91,8 @@ namespace IRCRelay
 			{
 				_ = Discord.CheckLiveStatus();
 			}
+
+			MaybeGenerateDigest();
 
 
 			/*bool sanyung = false, onTime = false;
@@ -88,6 +110,32 @@ namespace IRCRelay
 				string calls = sanyung ? CallManager.Instance?.GetCalls() ?? "" : "";
 				Discord.CallMessageAsync(onTimestr, calls);
 			}*/
+		}
+
+		private void MaybeGenerateDigest()
+		{
+			if (digestHours <= 0 || digestRunning || Ai == null || !Ai.Available)
+				return;
+			if ((DateTime.UtcNow - DigestManager.Instance.UpdatedUtc).TotalHours < digestHours)
+				return;
+
+			var lines = DigestBuffer.GetRecent(200);
+			if (lines.Count < 10)
+				return; // not enough activity to summarize
+
+			digestRunning = true;
+			_ = Task.Run(async () =>
+			{
+				try
+				{
+					string summary = await Ai.SummarizeAsync(lines);
+					DigestManager.Instance.Set(string.IsNullOrWhiteSpace(summary)
+						? DigestManager.Instance.Current
+						: summary);
+				}
+				catch { }
+				finally { digestRunning = false; }
+			});
 		}
 
 

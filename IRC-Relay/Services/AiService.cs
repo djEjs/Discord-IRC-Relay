@@ -10,11 +10,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
+
+using Newtonsoft.Json.Linq;
 
 using OpenAI;
 using OpenAI.Managers;
 using OpenAI.ObjectModels.RequestModels;
+using OpenAI.ObjectModels.ResponseModels;
+using OpenAI.ObjectModels.SharedModels;
 
 using IRCRelay.Emoji;
 using IRCRelay.LearnAI;
@@ -35,6 +40,9 @@ namespace IRCRelay.Services
 
 		private readonly dynamic config;
 		private readonly string model = DefaultModel;
+		private readonly float temperature = 0.6f;  // lower = more consistent answers
+		private readonly int maxTokens = 300;        // caps output length (cost + persona's "1~2 lines")
+		private readonly SearchService search;       // optional web-search tool
 		private OpenAIService openAiService;
 
 		/// <summary>True when a usable API key was configured and the client initialized.</summary>
@@ -43,6 +51,7 @@ namespace IRCRelay.Services
 		public AiService(dynamic config)
 		{
 			this.config = config;
+			this.search = new SearchService(config);
 
 			try
 			{
@@ -51,6 +60,14 @@ namespace IRCRelay.Services
 					string m = config.AIModel?.ToString();
 					if (!string.IsNullOrWhiteSpace(m))
 						this.model = m;
+				}
+				if (Program.HasMember(config, "AITemperature"))
+				{
+					try { this.temperature = Convert.ToSingle(config.AITemperature); } catch { }
+				}
+				if (Program.HasMember(config, "AIMaxTokens"))
+				{
+					try { this.maxTokens = Convert.ToInt32(config.AIMaxTokens); } catch { }
 				}
 
 				string apiKey = null;
@@ -104,6 +121,17 @@ namespace IRCRelay.Services
 					}
 				}
 
+				// Current date/time so "오늘 날짜" etc. isn't hallucinated.
+				var kr = new CultureInfo("ko-KR");
+				messagesList.Add(ChatMessage.FromSystem(
+					"현재 시각은 " + DateTime.Now.ToString("yyyy년 M월 d일 dddd tt h시 m분", kr) +
+					" (한국 시간)이야. 날짜/시간/요일을 물으면 반드시 이 값을 기준으로 답해."));
+				
+				// Recent channel mood/topics digest (refreshed periodically, cheap to inject).
+				string digest = IRCRelay.Digest.DigestManager.Instance.Current;
+				if (!string.IsNullOrWhiteSpace(digest))
+					messagesList.Add(ChatMessage.FromSystem("요즘 이 채널 분위기/화제(참고만): " + digest));
+				
 				// Auto-injected Discord custom emojis (replaces hand-written emoji lists in SystemContent).
 				if (availableEmojis != null && availableEmojis.Count > 0)
 				{
@@ -133,11 +161,17 @@ namespace IRCRelay.Services
 
 				messagesList.Add(ChatMessage.FromUser(userMessage));
 
-				var completionResult = await openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
+				var request = new ChatCompletionCreateRequest
 				{
 					Messages = messagesList,
-					Model = this.model
-				});
+					Model = this.model,
+					Temperature = this.temperature,
+					MaxTokens = this.maxTokens
+				};
+				if (search != null && search.Available)
+					request.Tools = new List<ToolDefinition> { BuildWebSearchTool() };
+
+				var completionResult = await RunWithToolsAsync(request, messagesList);
 
 				if (completionResult.Successful)
 				{
@@ -191,6 +225,101 @@ namespace IRCRelay.Services
 
 			broadcast("에러데스와");
 			return "에러데스와";
+		}
+
+		/// <summary>
+		/// Summarizes recent chat lines into a short mood/topic digest (2~3 sentences).
+		/// Used by the periodic channel-digest job; returns null on failure.
+		/// </summary>
+		public async Task<string> SummarizeAsync(IReadOnlyList<string> lines)
+		{
+			if (!Available || lines == null || lines.Count == 0)
+				return null;
+
+			try
+			{
+				var messages = new List<ChatMessage>
+				{
+					ChatMessage.FromSystem(
+						"다음은 디스코드/IRC 채널의 최근 대화 로그야. 채널의 요즘 화제와 분위기를 한국어 2~3문장으로 요약해. " +
+						"특정인 비방·개인정보·민감 발언 인용은 피하고, 무슨 얘기가 오가고 분위기가 어떤지 위주로 적어."),
+					ChatMessage.FromUser(string.Join("\n", lines))
+				};
+
+				var res = await openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
+				{
+					Messages = messages,
+					Model = this.model,
+					Temperature = 0.4f,
+					MaxTokens = 200
+				});
+
+				if (res.Successful && res.Choices != null && res.Choices.Count > 0)
+					return res.Choices[0].Message?.Content?.Trim();
+
+				Console.WriteLine("[AiService] summarize failed: " +
+					(res.Error != null ? res.Error.Message : "unknown"));
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("[AiService] summarize exception: " + ex.Message);
+			}
+			return null;
+		}
+
+		private async Task<ChatCompletionCreateResponse> RunWithToolsAsync(ChatCompletionCreateRequest request, List<ChatMessage> messages)
+		{
+			var res = await openAiService.ChatCompletion.CreateCompletion(request);
+			int guard = 0;
+			while (res.Successful && guard++ < 2)
+			{
+				ChatMessage m = (res.Choices != null && res.Choices.Count > 0) ? res.Choices[0].Message : null;
+				if (m == null || m.ToolCalls == null || m.ToolCalls.Count == 0)
+					break;
+
+				messages.Add(m); // assistant turn that requested the tool call(s)
+				foreach (var call in m.ToolCalls)
+				{
+					string toolResult = "검색 기능을 쓸 수 없어.";
+					if (call.FunctionCall != null && call.FunctionCall.Name == "web_search" && search != null)
+					{
+						string q = ExtractQuery(call.FunctionCall.Arguments);
+						Console.WriteLine("[web_search] " + q);
+						toolResult = await search.SearchAsync(q) ?? "검색 결과가 없어.";
+					}
+					messages.Add(ChatMessage.FromTool(toolResult, call.Id));
+				}
+				request.Messages = messages;
+				res = await openAiService.ChatCompletion.CreateCompletion(request);
+			}
+			return res;
+		}
+
+		private static ToolDefinition BuildWebSearchTool()
+		{
+			return ToolDefinition.DefineFunction(new FunctionDefinition
+			{
+				Name = "web_search",
+				Description = "최신 정보(뉴스/시세/날씨/실시간 사실 등)나 확실치 않은 사실을 확인해야 할 때만 웹 검색을 한다. 일상 잡담엔 쓰지 않는다.",
+				Parameters = PropertyDefinition.DefineObject(
+					new Dictionary<string, PropertyDefinition>
+					{
+						{ "query", PropertyDefinition.DefineString("검색할 질의(한국어 가능)") }
+					},
+					new List<string> { "query" },
+					false, null, null)
+			});
+		}
+
+		private static string ExtractQuery(string arguments)
+		{
+			try
+			{
+				if (!string.IsNullOrWhiteSpace(arguments))
+					return (string)JObject.Parse(arguments)["query"];
+			}
+			catch { }
+			return "";
 		}
 	}
 }

@@ -445,7 +445,7 @@ namespace IRCRelay
 
 				// Record non-command chat so the AI ("~봇") has a little recent context.
 				if (!formatted.StartsWith("~") && !formatted.StartsWith("$"))
-					session.History.Add(username, formatted);
+					session.RecordChat(username, formatted);
 
 				// Post a rich embed for registered link prefixes (skip command messages).
 				if (!formatted.StartsWith("~"))

@@ -55,8 +55,8 @@ namespace IRCRelay.Commands.Handlers
 			if (historyMax > 0 && !string.IsNullOrWhiteSpace(answer)
 				&& answer != "에러데스와" && answer != "AI 키가 설정되지 않았습니다. (settings.json의 AIApiKey를 확인해주세요)")
 			{
-				ctx.Session.History.Add(ctx.Username, str);
-				ctx.Session.History.Add(BotLabel(ctx.Config), answer);
+				ctx.Session.RecordChat(ctx.Username, str);
+				ctx.Session.RecordChat(BotLabel(ctx.Config), answer);
 			}
 		}
 
