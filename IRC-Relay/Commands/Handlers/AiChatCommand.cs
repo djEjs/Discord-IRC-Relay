@@ -12,7 +12,8 @@ namespace IRCRelay.Commands.Handlers
 	/// "~봇" / "~심심빙봇": ask the AI. Available on both Discord and IRC.
 	/// Enriches the prompt with the channel's frequently-used custom emojis and a
 	/// little recent-conversation context, both bounded (via AIEmojiMax / AIHistoryMax)
-	/// so token usage stays predictable.
+	/// so token usage stays predictable. On Discord, image attachments are sent to the
+	/// vision model so "~봇 이거 뭐야?" + an image analyzes the picture.
 	/// </summary>
 	public class AiChatCommand : CommandBase
 	{
@@ -24,15 +25,30 @@ namespace IRCRelay.Commands.Handlers
 		public override async Task ExecuteAsync(CommandContext ctx)
 		{
 			string[] a = ctx.Args;
-			if (a.Length < 2)
+
+			// Collect image attachment URLs (Discord only) for vision analysis.
+			List<string> images = null;
+			if (ctx.DiscordMessage != null && ctx.DiscordMessage.Attachments != null)
 			{
-				ctx.Broadcast("~심심빙봇 명령어 사용법 예시: **~봇 죽어**");
+				foreach (var att in ctx.DiscordMessage.Attachments)
+				{
+					if (IsImage(att.ContentType, att.Filename))
+						(images ?? (images = new List<string>())).Add(att.Url);
+				}
+			}
+			bool hasImage = images != null && images.Count > 0;
+
+			if (a.Length < 2 && !hasImage)
+			{
+				ctx.Broadcast("~심심빙봇 명령어 사용법 예시: **~봇 죽어** (이미지를 첨부하고 ~봇 하면 이미지 분석도 돼요)");
 				return;
 			}
 
 			string str = "";
 			for (int i = 1; i < a.Length; i++)
 				str += (a.Length == i + 1) ? a[i] : a[i] + ' ';
+			if (string.IsNullOrWhiteSpace(str) && hasImage)
+				str = "이 이미지에 대해 이야기해줘.";
 
 			int emojiMax = ConfigInt(ctx.Config, "AIEmojiMax", DefaultEmojiMax);
 			int historyMax = ConfigInt(ctx.Config, "AIHistoryMax", DefaultHistoryMax);
@@ -49,15 +65,24 @@ namespace IRCRelay.Commands.Handlers
 
 			IReadOnlyList<string> recent = historyMax > 0 ? ctx.Session.History.GetRecent(historyMax) : null;
 
-			string answer = await ctx.Ai.ChatAsync(ctx.Username, str, ctx.Broadcast, emojis, recent);
+			string answer = await ctx.Ai.ChatAsync(ctx.Username, str, ctx.Broadcast, emojis, recent, images);
 
 			// Remember this ~봇 exchange so later calls can reference prior bot conversations.
 			if (historyMax > 0 && !string.IsNullOrWhiteSpace(answer)
 				&& answer != "에러데스와" && answer != "AI 키가 설정되지 않았습니다. (settings.json의 AIApiKey를 확인해주세요)")
 			{
-				ctx.Session.RecordChat(ctx.Username, str);
+				ctx.Session.RecordChat(ctx.Username, hasImage ? "[이미지] " + str : str);
 				ctx.Session.RecordChat(BotLabel(ctx.Config), answer);
 			}
+		}
+
+		private static bool IsImage(string contentType, string filename)
+		{
+			if (!string.IsNullOrEmpty(contentType) && contentType.StartsWith("image/"))
+				return true;
+			string f = (filename ?? "").ToLowerInvariant();
+			return f.EndsWith(".png") || f.EndsWith(".jpg") || f.EndsWith(".jpeg")
+				|| f.EndsWith(".gif") || f.EndsWith(".webp");
 		}
 
 		private static string BotLabel(dynamic config)

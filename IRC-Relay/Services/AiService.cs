@@ -100,7 +100,8 @@ namespace IRCRelay.Services
 		/// original behavior). Returns the concatenated (emoji-substituted) response text.
 		/// </summary>
 		public async Task<string> ChatAsync(string userName, string userMessage, Action<string> broadcast,
-			IReadOnlyList<string> availableEmojis = null, IReadOnlyList<string> recentMessages = null)
+			IReadOnlyList<string> availableEmojis = null, IReadOnlyList<string> recentMessages = null,
+			IReadOnlyList<string> imageUrls = null)
 		{
 			if (!Available)
 			{
@@ -159,7 +160,18 @@ namespace IRCRelay.Services
 					Console.WriteLine("user content : " + str);
 				}
 
-				messagesList.Add(ChatMessage.FromUser(userMessage));
+				if (imageUrls != null && imageUrls.Count > 0)
+				{
+					// Multimodal message: text + image(s) for vision analysis.
+					var parts = new List<MessageContent> { MessageContent.TextContent(userMessage) };
+					foreach (string imageUrl in imageUrls)
+						parts.Add(MessageContent.ImageUrlContent(imageUrl));
+					messagesList.Add(ChatMessage.FromUser(parts));
+				}
+				else
+				{
+					messagesList.Add(ChatMessage.FromUser(userMessage));
+				}
 
 				var request = new ChatCompletionCreateRequest
 				{
