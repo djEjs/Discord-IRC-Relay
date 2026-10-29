@@ -86,6 +86,43 @@ namespace IRCRelay.Commands.Handlers
 		}
 	}
 
+	/// <summary>
+	/// "~상영회추가" / "~추가상영회" / "~상추" / "~추상": append content to the last screening/anime
+	/// entry (same as "~상영회 추가"). Rewrites args to "~추가 &lt;key&gt; ..." so AppendCommand handles it.
+	/// </summary>
+	public class ScreeningAppendCommand : CommandBase
+	{
+		public override string[] Triggers => new[] { "~상영회추가", "~추가상영회", "~상추", "~추상" };
+		public override bool SupportsIrc => false;
+
+		public override Task ExecuteAsync(CommandContext ctx)
+		{
+			string[] a = ctx.Args;
+			if (a.Length < 2)
+			{
+				ctx.Broadcast("~상영회추가 명령어 사용법 예시: **~상영회추가 (추가할 내용)**");
+				return Task.CompletedTask;
+			}
+
+			KeyValuePair<string, string>? entry = LearnDBManager.Instance.GetLastAniEntry();
+			if (entry == null)
+			{
+				ctx.Broadcast("추가할 상영회 항목이 없어요.");
+				return Task.CompletedTask;
+			}
+
+			// Rewrite to "~추가 <entry.Key> <content...>" so AppendCommand does the append.
+			var rewritten = new string[a.Length + 1];
+			rewritten[0] = "~추가";
+			rewritten[1] = entry.Value.Key;
+			for (int i = 1; i < a.Length; i++)
+				rewritten[i + 1] = a[i];
+			ctx.Args = rewritten;
+
+			return Task.CompletedTask;
+		}
+	}
+
 	/// <summary>"~상영회시작 &lt;id&gt; &lt;시작날짜&gt; [종료날짜]". Discord only.</summary>
 	public class ScreeningStartCommand : CommandBase
 	{

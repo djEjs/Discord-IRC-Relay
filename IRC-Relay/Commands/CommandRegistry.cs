@@ -34,7 +34,8 @@ namespace IRCRelay.Commands
 				.Register(new NickMarkerCommand())     // !닉     (IRC only)
 				.Register(new ScreeningExtendCommand())// ~상영회연장
 				.Register(new ScreeningInfoCommand())  // ~상영회 / ~심심빙애니 / ~심심빙상영회
-				.Register(new AppendCommand())         // ~추가   (must follow ScreeningInfoCommand)
+				.Register(new ScreeningAppendCommand())// ~상영회추가 / ~추가상영회 / ~상추 / ~추상 (rewrites to ~추가)
+				.Register(new AppendCommand())         // ~추가   (must follow Screening*Command)
 				.Register(new LiveAddCommand())        // ~방송
 				.Register(new LiveRemoveCommand())     // ~방송삭제
 				.Register(new ScreeningStartCommand()) // ~상영회시작

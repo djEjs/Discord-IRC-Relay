@@ -130,15 +130,24 @@ namespace IRCRelay.Commands.Handlers
 			string[] a = ctx.Args;
 			if (a.Length > 2)
 			{
-				string value = LearnDBManager.Instance.getString(a[1]);
+				string key = a[1];
+				// "~추가 상영회 ..." appends to the last screening/anime entry (like ~상영회추가).
+				if (key == "상영회")
+				{
+					var entry = LearnDBManager.Instance.GetLastAniEntry();
+					if (entry != null)
+						key = entry.Value.Key;
+				}
+
+				string value = LearnDBManager.Instance.getString(key);
 				if (value == null)
 				{
 					string str = "";
 					for (int i = 2; i < a.Length; i++)
 						str += (a.Length == i + 1) ? a[i] : a[i] + ' ';
 
-					LearnDBManager.Instance.SaveString(a[1], str);
-					ctx.Broadcast("\"" + a[1] + "\" 존재하지 않는 단어이므로 새로 저장했습니다.");
+					LearnDBManager.Instance.SaveString(key, str);
+					ctx.Broadcast("\"" + key + "\" 존재하지 않는 단어이므로 새로 저장했습니다.");
 				}
 				else
 				{
@@ -146,8 +155,8 @@ namespace IRCRelay.Commands.Handlers
 					for (int i = 2; i < a.Length; i++)
 						str += (a.Length == i + 1) ? a[i] : a[i] + ' ';
 
-					LearnDBManager.Instance.SaveString(a[1], str);
-					ctx.Broadcast("\"" + a[1] + "\"에 덧붙여서 추가했습니다.");
+					LearnDBManager.Instance.SaveString(key, str);
+					ctx.Broadcast("\"" + key + "\"에 덧붙여서 추가했습니다.");
 				}
 			}
 			else
